@@ -9,22 +9,39 @@ The project is currently in the design and discovery phase. Its first goal is to
 The PyPI package name is `claude-for-claude`.
 The installed command is `clfc`.
 
+Current install status:
+
+- Installable now from GitHub or from a locally built wheel.
+- Installable from PyPI after the first `claude-for-claude` release is uploaded with `twine`.
+
+Install the current GitHub version:
+
+```powershell
+py -m pip install --upgrade "git+https://github.com/Longseabear/ClaudeForClaude.git"
+clfc --help
+clfc doctor
+```
+
+Install from PyPI after release:
+
 ```powershell
 py -m pip install --upgrade claude-for-claude
 clfc --help
 clfc doctor
 ```
 
-Before the first PyPI release is uploaded, install from GitHub:
+Install from a local checkout:
 
 ```powershell
-py -m pip install --upgrade "git+https://github.com/Longseabear/ClaudeForClaude.git"
+git clone https://github.com/Longseabear/ClaudeForClaude.git
+cd ClaudeForClaude
+py -m pip install -e .
+clfc doctor
 ```
 
-For local development:
+The repository also includes `.\clfc.cmd` for development without installing:
 
 ```powershell
-py -m pip install -e .
 .\clfc.cmd doctor
 ```
 
@@ -55,6 +72,40 @@ clfc open
 clfc name <session-id-or-prefix> <display-name>
 clfc inspect <session-id-or-prefix>
 clfc settings show
+```
+
+## Quick Start With `clfc`
+
+Run these commands from the project workspace you want ClaudeForClaude to manage.
+
+Check local readiness:
+
+```powershell
+clfc doctor
+```
+
+Initialize workspace metadata:
+
+```powershell
+clfc init
+```
+
+Index Claude Code transcripts for the current workspace:
+
+```powershell
+clfc index
+```
+
+List indexed sessions:
+
+```powershell
+clfc list
+```
+
+Open the numbered session picker:
+
+```powershell
+clfc open
 ```
 
 Launch Claude Code interactively with CLFC defaults:
