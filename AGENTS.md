@@ -171,6 +171,16 @@ The files above are CLFC-owned copies or overlays. They are not the user's proje
 
 ## CLI model
 
+The current implemented slice is intentionally smaller than the long-term command set:
+
+```bash
+clfc doctor
+clfc scan
+clfc inspect <session_id_or_prefix>
+```
+
+These commands are read-only and privacy-preserving. They are the foundation for the broader command set below.
+
 The intended command set is:
 
 ```bash

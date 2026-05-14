@@ -11,6 +11,30 @@ The project is currently in the design and discovery phase. Its first goal is to
 - Support Ollama-backed Claude Code routing through the Anthropic-compatible endpoint
 - Define a CLFC command model that fits Claude Code instead of directly copying CodexForCodex
 
+## Current Commands
+
+```powershell
+python -m clfc.cli.main doctor
+python -m clfc.cli.main scan
+python -m clfc.cli.main inspect <session-id-or-prefix>
+```
+
+On Windows, the local launcher also works:
+
+```powershell
+.\clfc.cmd scan
+```
+
+`scan` and `inspect` are intentionally redacted. They summarize record types, block types, tool names, errors, models, and token usage without printing prompt text, tool output, thinking text, or attachment content.
+
+## Development
+
+Run tests with:
+
+```powershell
+python -m unittest discover -v
+```
+
 ## Key Documents
 
 - `AGENTS.md` is the implementation contract.
