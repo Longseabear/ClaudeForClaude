@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import argparse
 
-from clfc.cli.commands import checkout, current, doctor, fork, index, init, inspect, interactive, list, name, resume, scan, settings
+from clfc.cli.commands import checkout, current, doctor, fork, index, init, inspect, interactive, list, memory, name, resume, scan, settings
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -134,6 +134,31 @@ def build_parser() -> argparse.ArgumentParser:
     current_parser.add_argument("--json", action="store_true", help="Print machine-readable JSON.")
     current_parser.set_defaults(handler=current.run)
 
+    memory_parser = subparsers.add_parser("memory", help="Manage session-local CLAUDE.md handling.")
+    memory_subparsers = memory_parser.add_subparsers(dest="memory_command")
+
+    memory_status = memory_subparsers.add_parser("status", help="Show session memory status.")
+    _add_memory_target_args(memory_status)
+    memory_status.set_defaults(handler=memory.run)
+
+    memory_init = memory_subparsers.add_parser("init", help="Create a manual session-local CLAUDE.md.")
+    _add_memory_target_args(memory_init)
+    memory_init.set_defaults(handler=memory.run)
+
+    memory_clone = memory_subparsers.add_parser("clone", help="Copy a file into session-local CLAUDE.md.")
+    memory_clone.add_argument("source", help="Source markdown file.")
+    _add_memory_target_args(memory_clone)
+    memory_clone.set_defaults(handler=memory.run)
+
+    memory_clear = memory_subparsers.add_parser("clear", help="Remove session-local CLAUDE.md and return to sync mode.")
+    _add_memory_target_args(memory_clear)
+    memory_clear.set_defaults(handler=memory.run)
+
+    memory_mode = memory_subparsers.add_parser("mode", help="Set memory mode for a session.")
+    memory_mode.add_argument("mode", choices=["sync", "manual"])
+    _add_memory_target_args(memory_mode)
+    memory_mode.set_defaults(handler=memory.run)
+
     name_parser = subparsers.add_parser("name", help="Show or set a CLFC display name for an indexed session.")
     name_parser.add_argument("session", help="Session id, unique prefix, or existing display name.")
     name_parser.add_argument("display_name", nargs="?", help="Display name to store in the CLFC index.")
@@ -196,3 +221,11 @@ def build_parser() -> argparse.ArgumentParser:
     inspect_parser.set_defaults(handler=inspect.run)
 
     return parser
+
+
+def _add_memory_target_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("session", nargs="?", help="Session id, unique prefix, or display name. Defaults to the checked-out session.")
+    parser.add_argument("--workspace", help="Workspace path. Defaults to the current directory.")
+    parser.add_argument("-a", "--all", action="store_true", help="Resolve across all indexed workspaces.")
+    parser.add_argument("--refresh", action="store_true", help="Refresh the index before resolving.")
+    parser.add_argument("--json", action="store_true", help="Print machine-readable JSON.")

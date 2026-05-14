@@ -185,6 +185,12 @@ clfc fork
 clfc fork <session_id_or_prefix>
 clfc checkout <session_id_or_prefix>
 clfc current
+clfc memory status
+clfc memory mode sync
+clfc memory mode manual
+clfc memory init
+clfc memory clone <path>
+clfc memory clear
 clfc settings show
 clfc settings set dangerously-skip-permissions on
 clfc settings set permission-mode bypassPermissions
@@ -577,6 +583,38 @@ Implementation rule:
 - resolve `active_session_id` against the index
 - show session id, display name, updated time, models, and transcript path
 
+### `clfc memory status`
+
+Show session-local `CLAUDE.md` runtime state.
+
+Implementation rule:
+
+- default to the checked-out active session
+- resolve optional session id, unique prefix, or display name when provided
+- show runtime workspace path, memory mode, memory path, and whether `CLAUDE.md` exists
+
+### `clfc memory mode sync|manual`
+
+Set session-local memory handling mode.
+
+Implementation rule:
+
+- `sync` means `resume` and `fork` copy the nearest `CLAUDE.md` from the real workspace ancestry into the session runtime workspace before launching
+- `manual` means CLFC leaves session-local `CLAUDE.md` untouched before launching
+- store the mode in `~/.clfc/<workspace_hash>/<session_id>/session.json`
+
+### `clfc memory init`
+
+Create a session-local `CLAUDE.md` and switch memory mode to `manual`.
+
+### `clfc memory clone <path>`
+
+Copy the given file into session-local `CLAUDE.md` and switch memory mode to `manual`.
+
+### `clfc memory clear`
+
+Remove session-local `CLAUDE.md` and switch memory mode back to `sync`.
+
 ### `clfc name <session_id_or_prefix> <display_name>`
 
 Set a CLFC-owned display name for an indexed session.
@@ -933,6 +971,7 @@ At minimum, changes should be validated against:
 - `clfc resume --dry-run` using the checked-out active session
 - `clfc fork --dry-run` building `claude --resume <active_session_id> --fork-session`
 - `clfc fork <session-prefix> --dry-run` resolving an indexed session and adding `--fork-session`
+- `clfc memory status/init/clone/clear/mode` managing session-local `CLAUDE.md` without mutating project `CLAUDE.md`
 - `clfc name <session-prefix> <display-name>` storing CLFC-owned display names and preserving them across index refreshes
 - `clfc settings set dangerously-skip-permissions on|off` updating CLFC-owned launcher defaults without editing Claude Code settings
 - `clfc add` working for:

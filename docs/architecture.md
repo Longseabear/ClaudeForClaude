@@ -20,6 +20,9 @@ clfc.core.settings
 clfc.core.runner
   Thin Claude Code interactive launcher command builder
 
+clfc.core.runtime
+  Per-session runtime workspace and CLAUDE.md sync/manual memory handling
+
 clfc.core.summaries
   Dataclasses for transcript, event, and usage summaries
 
@@ -65,6 +68,7 @@ The first production slice is:
 7. CLFC-owned display names for stable human selection
 8. local `.clfc/workspace.json` active checkout
 9. native Claude Code fork launcher for indexed or active sessions
+10. per-session runtime workspaces with sync/manual `CLAUDE.md`
 
 Session mutation features such as checkout, templates, and workers should come after the transcript model is stable.
 

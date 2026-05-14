@@ -21,6 +21,7 @@ python -m clfc.cli.main resume <session-id-or-prefix>
 python -m clfc.cli.main fork <session-id-or-prefix>
 python -m clfc.cli.main checkout <session-id-or-prefix>
 python -m clfc.cli.main current
+python -m clfc.cli.main memory status
 python -m clfc.cli.main scan
 python -m clfc.cli.main index
 python -m clfc.cli.main list
@@ -91,6 +92,18 @@ The same launcher flags work with `resume`:
 ```powershell
 .\clfc.cmd resume 35ebc4da --dangerously-skip-permissions
 ```
+
+Manage session-local `CLAUDE.md` behavior:
+
+```powershell
+.\clfc.cmd memory status
+.\clfc.cmd memory mode sync
+.\clfc.cmd memory init
+.\clfc.cmd memory clone C:\path\to\CLAUDE.md
+.\clfc.cmd memory clear
+```
+
+In `sync` mode, `resume` and `fork` run Claude from a per-session runtime workspace under `%USERPROFILE%\.clfc\...`, copy the nearest project `CLAUDE.md` into that runtime workspace, and add the real project directory with `--add-dir`.
 
 This default is intentionally stored in CLFC's own settings file under `%LOCALAPPDATA%\clfc\settings.json`, not in Claude Code's global settings.
 
