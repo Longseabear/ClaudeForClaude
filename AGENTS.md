@@ -175,6 +175,11 @@ The current implemented slice is intentionally smaller than the long-term comman
 
 ```bash
 clfc doctor
+clfc interactive
+clfc interactive --dangerously-skip-permissions
+clfc settings show
+clfc settings set dangerously-skip-permissions on
+clfc settings set permission-mode bypassPermissions
 clfc scan
 clfc index
 clfc list
@@ -212,6 +217,14 @@ clfc checkout <claude_session_id>
 clfc remove <session_name>
 clfc remove <session_name> --force
 clfc model --list
+clfc interactive
+clfc interactive --dangerously-skip-permissions
+clfc interactive --permission-mode bypassPermissions
+clfc settings show
+clfc settings set model <model>
+clfc settings set effort <level>
+clfc settings set permission-mode <mode>
+clfc settings set dangerously-skip-permissions on|off
 clfc exec [-v|--verbose] "<prompt or command>"
 clfc resume [-v|--verbose] <claude_session_id> "<prompt or command>"
 clfc memory init
@@ -471,6 +484,48 @@ Implementation rule:
 - show `ANTHROPIC_MODEL` when set
 - do not invent a profile system
 - do not require Claude Code to be installed just to list local settings
+
+### `clfc interactive`
+
+Launch Claude Code in its native interactive mode.
+
+Implementation rule:
+
+- build and run a `claude` command without `-p`
+- default the working directory to the current workspace
+- load CLFC launcher defaults from `%LOCALAPPDATA%\clfc\settings.json`
+- support per-launch overrides for `--model`, `--effort`, `--permission-mode`, `--dangerously-skip-permissions`, `--allow-dangerously-skip-permissions`, `--resume`, `--continue`, `--name`, `--bare`, and `--add-dir`
+- pass arguments after `--` directly to Claude Code
+- support `--dry-run` for verification without launching Claude Code
+
+### `clfc settings show`
+
+Show CLFC-owned launcher defaults.
+
+Implementation rule:
+
+- read `%LOCALAPPDATA%\clfc\settings.json`
+- do not modify Claude Code's global `~/.claude/settings.json`
+
+### `clfc settings set <key> <value>`
+
+Update a CLFC-owned launcher default.
+
+Supported keys:
+
+- `model`
+- `effort`
+- `permission-mode`
+- `dangerously-skip-permissions`
+- `allow-dangerously-skip-permissions`
+
+Implementation rule:
+
+- write to `%LOCALAPPDATA%\clfc\settings.json`
+- use `clear`, `none`, `null`, or `unset` to remove string defaults
+- use `on` or `off` for boolean defaults
+- warn when enabling `dangerously-skip-permissions`
+- do not silently edit Claude Code settings
 
 ### `clfc memory init`
 
@@ -776,6 +831,9 @@ At minimum, changes should be validated against:
 - `clfc status` preserving the older detailed multi-line session view
 - `clfc info` resolving active session, named session, and Claude Code session id
 - `clfc model --list` showing local model configuration sources without inventing Codex profiles
+- `clfc interactive --dry-run` building a native Claude Code interactive command
+- `clfc interactive --dangerously-skip-permissions --dry-run` adding Claude Code's bypass flag explicitly
+- `clfc settings set dangerously-skip-permissions on|off` updating CLFC-owned launcher defaults without editing Claude Code settings
 - `clfc add` working for:
   - a pending new Claude Code session UUID
   - an explicit Claude Code session id

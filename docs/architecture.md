@@ -14,6 +14,12 @@ clfc.core.paths
 clfc.core.transcript
   JSONL event parsing and safe summarization
 
+clfc.core.settings
+  CLFC launcher defaults stored under the CLFC data root
+
+clfc.core.runner
+  Thin Claude Code interactive launcher command builder
+
 clfc.core.summaries
   Dataclasses for transcript, event, and usage summaries
 
@@ -57,3 +63,5 @@ The first production slice is:
 5. fast `list` from that index
 
 Session mutation features such as checkout, templates, and workers should come after the transcript model is stable.
+
+Interactive launching is intentionally thin. CLFC does not reimplement Claude Code; it builds a `claude` command with saved defaults and lets Claude Code own the interactive experience.
