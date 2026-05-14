@@ -15,8 +15,11 @@ The project is currently in the design and discovery phase. Its first goal is to
 
 ```powershell
 python -m clfc.cli.main doctor
+python -m clfc.cli.main init
 python -m clfc.cli.main interactive
 python -m clfc.cli.main resume <session-id-or-prefix>
+python -m clfc.cli.main checkout <session-id-or-prefix>
+python -m clfc.cli.main current
 python -m clfc.cli.main scan
 python -m clfc.cli.main index
 python -m clfc.cli.main list
@@ -43,6 +46,15 @@ Resume an indexed Claude Code session from `list`:
 .\clfc.cmd index
 .\clfc.cmd list
 .\clfc.cmd resume 35ebc4da
+```
+
+Check out a session as the active workspace session, then resume it without an argument:
+
+```powershell
+.\clfc.cmd init
+.\clfc.cmd checkout 35ebc4da
+.\clfc.cmd current
+.\clfc.cmd resume
 ```
 
 Give a session a CLFC-owned display name:

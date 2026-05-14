@@ -175,10 +175,14 @@ The current implemented slice is intentionally smaller than the long-term comman
 
 ```bash
 clfc doctor
+clfc init
 clfc interactive
 clfc interactive --dangerously-skip-permissions
 clfc resume <session_id_or_prefix>
+clfc resume
 clfc resume <session_id_or_prefix> --fork
+clfc checkout <session_id_or_prefix>
+clfc current
 clfc settings show
 clfc settings set dangerously-skip-permissions on
 clfc settings set permission-mode bypassPermissions
@@ -219,6 +223,9 @@ clfc clone <source_session_or_claude_session_id> <new_session_name>
 clfc delete --idx <n>
 clfc checkout <session_name>
 clfc checkout <claude_session_id>
+clfc checkout <session_id_or_prefix>
+clfc current
+clfc resume
 clfc remove <session_name>
 clfc remove <session_name> --force
 clfc model --list
@@ -521,6 +528,39 @@ Implementation rule:
 - reuse the same launcher defaults and overrides as `clfc interactive`
 - support `--fork` by adding Claude Code's `--fork-session`
 - support `--dry-run` for verification without launching Claude Code
+
+### `clfc resume`
+
+Resume the currently checked-out workspace session.
+
+Implementation rule:
+
+- require `.clfc/workspace.json`
+- read `active_session_id`
+- resolve it against the current workspace index
+- use the same launch behavior as `clfc resume <session_id_or_prefix>`
+
+### `clfc checkout <session_id_or_prefix>`
+
+Set the active CLFC session for the current workspace.
+
+Implementation rule:
+
+- resolve the session from the CLFC index by full id, unique prefix, or display name
+- create `.clfc/workspace.json` if needed
+- store `active_session_id`
+- do not mutate Claude Code transcripts
+- support `--clear` to remove the active pointer
+
+### `clfc current`
+
+Show the active CLFC session for the current workspace.
+
+Implementation rule:
+
+- read `.clfc/workspace.json`
+- resolve `active_session_id` against the index
+- show session id, display name, updated time, models, and transcript path
 
 ### `clfc name <session_id_or_prefix> <display_name>`
 
@@ -873,6 +913,9 @@ At minimum, changes should be validated against:
 - `clfc interactive --dangerously-skip-permissions --dry-run` adding Claude Code's bypass flag explicitly
 - `clfc resume <session-prefix> --dry-run` resolving an indexed session and building `claude --resume <full_session_id>`
 - `clfc resume <session-prefix> --fork --dry-run` adding `--fork-session`
+- `clfc init` creating local `.clfc/workspace.json`
+- `clfc checkout <session-prefix>` storing the active session pointer
+- `clfc resume --dry-run` using the checked-out active session
 - `clfc name <session-prefix> <display-name>` storing CLFC-owned display names and preserving them across index refreshes
 - `clfc settings set dangerously-skip-permissions on|off` updating CLFC-owned launcher defaults without editing Claude Code settings
 - `clfc add` working for:

@@ -9,6 +9,7 @@ from clfc.core.index import ResolveError, resolve_record, write_index
 from clfc.core.paths import iter_transcript_files, workspace_transcripts
 from clfc.core.runner import InteractiveOptions, build_interactive_command, run_interactive
 from clfc.core.transcript import summarize_transcript
+from clfc.core.workspace import WorkspaceError, active_record
 
 
 def run(args: Namespace) -> int:
@@ -18,8 +19,12 @@ def run(args: Namespace) -> int:
         write_index([summarize_transcript(path) for path in files])
 
     try:
-        record = resolve_record(args.session, workspace=workspace, all_workspaces=args.all)
-    except ResolveError as error:
+        record = (
+            resolve_record(args.session, workspace=workspace, all_workspaces=args.all)
+            if args.session
+            else active_record(workspace)
+        )
+    except (ResolveError, WorkspaceError) as error:
         print(str(error), file=sys.stderr)
         return 1
 

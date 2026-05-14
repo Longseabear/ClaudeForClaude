@@ -7,6 +7,7 @@ from pathlib import Path
 from clfc.core.index import read_all_records, read_workspace_records, write_index
 from clfc.core.paths import iter_transcript_files, workspace_transcripts
 from clfc.core.transcript import summarize_transcript
+from clfc.core.workspace import WorkspaceError, active_session_id
 from clfc.utils.output import format_table
 
 
@@ -17,6 +18,7 @@ def run(args: Namespace) -> int:
         write_index([summarize_transcript(path) for path in files])
 
     records = read_all_records() if args.all else read_workspace_records(workspace)
+    active_id = _active_id(workspace)
 
     if args.json:
         print(json.dumps(records, indent=2, ensure_ascii=False))
@@ -34,6 +36,7 @@ def run(args: Namespace) -> int:
         rows.append(
             [
                 _short(str(record.get("session_id", ""))),
+                "*" if record.get("session_id") == active_id else "",
                 str(record.get("display_name") or ""),
                 _short(str(record.get("workspace_hash", "")), 6) if args.all else "",
                 record.get("updated_at") or "",
@@ -47,7 +50,7 @@ def run(args: Namespace) -> int:
             ]
         )
 
-    headers = ["session", "name"]
+    headers = ["session", "active", "name"]
     if args.all:
         headers.append("ws")
     headers.extend(["updated", "models", "user", "asst", "tools", "errs", "in_tok", "out_tok"])
@@ -60,7 +63,7 @@ def run(args: Namespace) -> int:
 def _trim_workspace_column(rows: list[list[object]], include_workspace: bool) -> list[list[object]]:
     if include_workspace:
         return rows
-    return [[row[0], row[1], *row[3:]] for row in rows]
+    return [[row[0], row[1], row[2], *row[4:]] for row in rows]
 
 
 def _short(value: str, length: int = 8) -> str:
@@ -86,3 +89,10 @@ def _tool_count(record: dict[str, object]) -> int:
     if not isinstance(counts, dict):
         return 0
     return sum(value for value in counts.values() if isinstance(value, int))
+
+
+def _active_id(workspace: Path) -> str | None:
+    try:
+        return active_session_id(workspace)
+    except WorkspaceError:
+        return None

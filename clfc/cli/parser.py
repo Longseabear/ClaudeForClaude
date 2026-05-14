@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import argparse
 
-from clfc.cli.commands import doctor, index, inspect, interactive, list, name, resume, scan, settings
+from clfc.cli.commands import checkout, current, doctor, index, init, inspect, interactive, list, name, resume, scan, settings
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -15,6 +15,11 @@ def build_parser() -> argparse.ArgumentParser:
     doctor_parser = subparsers.add_parser("doctor", help="Check local Claude Code and Ollama readiness.")
     doctor_parser.add_argument("--json", action="store_true", help="Print machine-readable JSON.")
     doctor_parser.set_defaults(handler=doctor.run)
+
+    init_parser = subparsers.add_parser("init", help="Initialize local .clfc workspace metadata.")
+    init_parser.add_argument("--workspace", help="Workspace path. Defaults to the current directory.")
+    init_parser.add_argument("--json", action="store_true", help="Print machine-readable JSON.")
+    init_parser.set_defaults(handler=init.run)
 
     interactive_parser = subparsers.add_parser(
         "interactive",
@@ -52,7 +57,7 @@ def build_parser() -> argparse.ArgumentParser:
         "resume",
         help="Resume an indexed Claude Code session by id or unique prefix.",
     )
-    resume_parser.add_argument("session", help="Session id or unique prefix from `clfc list`.")
+    resume_parser.add_argument("session", nargs="?", help="Session id or unique prefix from `clfc list`. Defaults to the checked-out session.")
     resume_parser.add_argument("--workspace", help="Workspace path to resolve within. Defaults to the current directory.")
     resume_parser.add_argument("-a", "--all", action="store_true", help="Resolve across all indexed workspaces.")
     resume_parser.add_argument("--refresh", action="store_true", help="Refresh the index before resolving.")
@@ -79,6 +84,24 @@ def build_parser() -> argparse.ArgumentParser:
     resume_parser.add_argument("--add-dir", action="append", help="Additional directory to allow. Repeatable.")
     resume_parser.add_argument("--dry-run", action="store_true", help="Print the claude command without launching it.")
     resume_parser.set_defaults(handler=resume.run)
+
+    checkout_parser = subparsers.add_parser("checkout", help="Set the active CLFC session for this workspace.")
+    checkout_parser.add_argument("session", nargs="?", help="Session id, unique prefix, or display name.")
+    checkout_parser.add_argument("--clear", action="store_true", help="Clear the active session.")
+    checkout_parser.add_argument("--workspace", help="Workspace path. Defaults to the current directory.")
+    checkout_parser.add_argument("-a", "--all", action="store_true", help="Resolve across all indexed workspaces.")
+    checkout_parser.add_argument("--refresh", action="store_true", help="Refresh the index before resolving.")
+    checkout_parser.add_argument("--json", action="store_true", help="Print machine-readable JSON.")
+    checkout_parser.set_defaults(handler=checkout.run)
+
+    current_parser = subparsers.add_parser(
+        "current",
+        aliases=["status"],
+        help="Show the active CLFC session for this workspace.",
+    )
+    current_parser.add_argument("--workspace", help="Workspace path. Defaults to the current directory.")
+    current_parser.add_argument("--json", action="store_true", help="Print machine-readable JSON.")
+    current_parser.set_defaults(handler=current.run)
 
     name_parser = subparsers.add_parser("name", help="Show or set a CLFC display name for an indexed session.")
     name_parser.add_argument("session", help="Session id, unique prefix, or existing display name.")
