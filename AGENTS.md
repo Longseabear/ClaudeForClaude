@@ -197,6 +197,7 @@ clfc settings set permission-mode bypassPermissions
 clfc scan
 clfc index
 clfc list
+clfc open
 clfc name <session_id_or_prefix> <display_name>
 clfc inspect <session_id_or_prefix>
 ```

@@ -4,6 +4,32 @@ ClaudeForClaude (CLFC) is a Windows-first workspace helper for Claude Code.
 
 The project is currently in the design and discovery phase. Its first goal is to understand Claude Code's local transcript system and build privacy-preserving tooling around it before adding heavier session-management features.
 
+## Installation
+
+The PyPI package name is `claude-for-claude`.
+The installed command is `clfc`.
+
+```powershell
+py -m pip install --upgrade claude-for-claude
+clfc --help
+clfc doctor
+```
+
+Before the first PyPI release is uploaded, install from GitHub:
+
+```powershell
+py -m pip install --upgrade "git+https://github.com/Longseabear/ClaudeForClaude.git"
+```
+
+For local development:
+
+```powershell
+py -m pip install -e .
+.\clfc.cmd doctor
+```
+
+See `docs/installation.md` for pipx, PATH troubleshooting, first-run setup, and uninstall instructions.
+
 ## Current Focus
 
 - Analyze Claude Code transcript JSONL files under `~/.claude/projects`
@@ -14,102 +40,96 @@ The project is currently in the design and discovery phase. Its first goal is to
 ## Current Commands
 
 ```powershell
-python -m clfc.cli.main doctor
-python -m clfc.cli.main init
-python -m clfc.cli.main interactive
-python -m clfc.cli.main resume <session-id-or-prefix>
-python -m clfc.cli.main fork <session-id-or-prefix>
-python -m clfc.cli.main checkout <session-id-or-prefix>
-python -m clfc.cli.main current
-python -m clfc.cli.main memory status
-python -m clfc.cli.main scan
-python -m clfc.cli.main index
-python -m clfc.cli.main list
-python -m clfc.cli.main open
-python -m clfc.cli.main name <session-id-or-prefix> <display-name>
-python -m clfc.cli.main inspect <session-id-or-prefix>
-python -m clfc.cli.main settings show
-```
-
-On Windows, the local launcher also works:
-
-```powershell
-.\clfc.cmd scan
+clfc doctor
+clfc init
+clfc interactive
+clfc resume <session-id-or-prefix>
+clfc fork <session-id-or-prefix>
+clfc checkout <session-id-or-prefix>
+clfc current
+clfc memory status
+clfc scan
+clfc index
+clfc list
+clfc open
+clfc name <session-id-or-prefix> <display-name>
+clfc inspect <session-id-or-prefix>
+clfc settings show
 ```
 
 Launch Claude Code interactively with CLFC defaults:
 
 ```powershell
-.\clfc.cmd interactive
+clfc interactive
 ```
 
 Resume an indexed Claude Code session from `list`:
 
 ```powershell
-.\clfc.cmd index
-.\clfc.cmd list
-.\clfc.cmd resume 35ebc4da
+clfc index
+clfc list
+clfc resume 35ebc4da
 ```
 
 Pick an indexed session from a numbered menu:
 
 ```powershell
-.\clfc.cmd open
-.\clfc.cmd open --select 1 --action checkout
-.\clfc.cmd open --select 1 --action resume --dry-run
+clfc open
+clfc open --select 1 --action checkout
+clfc open --select 1 --action resume --dry-run
 ```
 
 Check out a session as the active workspace session, then resume it without an argument:
 
 ```powershell
-.\clfc.cmd init
-.\clfc.cmd checkout 35ebc4da
-.\clfc.cmd current
-.\clfc.cmd resume
+clfc init
+clfc checkout 35ebc4da
+clfc current
+clfc resume
 ```
 
 Give a session a CLFC-owned display name:
 
 ```powershell
-.\clfc.cmd name 35ebc4da main
-.\clfc.cmd resume main
-.\clfc.cmd name main --clear
+clfc name 35ebc4da main
+clfc resume main
+clfc name main --clear
 ```
 
 Fork an indexed session into a new Claude Code conversation:
 
 ```powershell
-.\clfc.cmd resume 35ebc4da --fork
-.\clfc.cmd fork 35ebc4da
-.\clfc.cmd fork
+clfc resume 35ebc4da --fork
+clfc fork 35ebc4da
+clfc fork
 ```
 
 Temporarily bypass Claude Code permission checks for one interactive launch:
 
 ```powershell
-.\clfc.cmd interactive --dangerously-skip-permissions
+clfc interactive --dangerously-skip-permissions
 ```
 
 Persist that behavior as a CLFC launcher default:
 
 ```powershell
-.\clfc.cmd settings set dangerously-skip-permissions on
+clfc settings set dangerously-skip-permissions on
 ```
 
 The same launcher flags work with `resume`:
 
 ```powershell
-.\clfc.cmd resume 35ebc4da --dangerously-skip-permissions
+clfc resume 35ebc4da --dangerously-skip-permissions
 ```
 
 Manage session-local `CLAUDE.md` behavior:
 
 ```powershell
-.\clfc.cmd memory status
-.\clfc.cmd memory mode sync
-.\clfc.cmd memory init
-.\clfc.cmd memory clone C:\path\to\CLAUDE.md
-.\clfc.cmd memory clear
+clfc memory status
+clfc memory mode sync
+clfc memory init
+clfc memory clone C:\path\to\CLAUDE.md
+clfc memory clear
 ```
 
 In `sync` mode, `resume` and `fork` run Claude from a per-session runtime workspace under `%USERPROFILE%\.clfc\...`, copy the nearest project `CLAUDE.md` into that runtime workspace, and add the real project directory with `--add-dir`.
@@ -126,8 +146,19 @@ Run tests with:
 python -m unittest discover -v
 ```
 
+Build and validate the package locally:
+
+```powershell
+python -m build
+python -m twine check dist/*
+```
+
+See `docs/publishing.md` for the full PyPI release checklist.
+
 ## Key Documents
 
 - `AGENTS.md` is the implementation contract.
 - `CLAUDE.md` tells Claude Code to use `AGENTS.md` as the source of truth.
+- `docs/installation.md` covers user installation and first-run setup.
+- `docs/publishing.md` covers PyPI/TestPyPI release flow.
 - `docs/claude-conversation-system.md` records observed transcript structure and early product implications.

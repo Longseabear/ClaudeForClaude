@@ -3,13 +3,32 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "claudeforclaude"
+name = "claude-for-claude"
 version = "0.1.0"
 description = "Privacy-preserving workspace helper for Claude Code transcripts."
-readme = "README.md"
+readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.10"
 authors = [{ name = "Longseabear" }]
 dependencies = []
+keywords = ["claude-code", "cli", "transcripts", "ollama", "agent-tools"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development",
+    "Topic :: Utilities",
+]
+
+[project.urls]
+Homepage = "https://github.com/Longseabear/ClaudeForClaude"
+Repository = "https://github.com/Longseabear/ClaudeForClaude.git"
+Issues = "https://github.com/Longseabear/ClaudeForClaude/issues"
 
 [project.scripts]
 clfc = "clfc.cli.main:main"
