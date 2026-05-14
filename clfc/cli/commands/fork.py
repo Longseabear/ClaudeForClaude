@@ -4,11 +4,11 @@ import sys
 from argparse import Namespace
 from pathlib import Path
 
+from clfc.cli.commands.launch import launch_record
 from clfc.core.index import ResolveError, resolve_record, write_index
 from clfc.core.paths import iter_transcript_files, workspace_transcripts
 from clfc.core.transcript import summarize_transcript
 from clfc.core.workspace import WorkspaceError, active_record
-from clfc.cli.commands.launch import launch_record
 
 
 def run(args: Namespace) -> int:
@@ -35,7 +35,7 @@ def run(args: Namespace) -> int:
         permission_mode=args.permission_mode,
         dangerously_skip_permissions=args.dangerously_skip_permissions,
         allow_dangerously_skip_permissions=args.allow_dangerously_skip_permissions,
-        fork_session=args.fork,
+        fork_session=True,
         name=args.name,
         bare=args.bare,
         add_dirs=args.add_dir or [],

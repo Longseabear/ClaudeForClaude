@@ -181,6 +181,8 @@ clfc interactive --dangerously-skip-permissions
 clfc resume <session_id_or_prefix>
 clfc resume
 clfc resume <session_id_or_prefix> --fork
+clfc fork
+clfc fork <session_id_or_prefix>
 clfc checkout <session_id_or_prefix>
 clfc current
 clfc settings show
@@ -235,6 +237,8 @@ clfc interactive --permission-mode bypassPermissions
 clfc resume <session_id_or_prefix>
 clfc resume <session_id_or_prefix> --fork
 clfc resume <session_id_or_prefix> --dangerously-skip-permissions
+clfc fork
+clfc fork <session_id_or_prefix>
 clfc settings show
 clfc settings set model <model>
 clfc settings set effort <level>
@@ -267,7 +271,6 @@ Deprecated or wrong-project commands:
 
 ```bash
 cfc
-clfc fork
 ```
 
 They should fail clearly and suggest the current CLFC command.
@@ -539,6 +542,18 @@ Implementation rule:
 - read `active_session_id`
 - resolve it against the current workspace index
 - use the same launch behavior as `clfc resume <session_id_or_prefix>`
+
+### `clfc fork [session_id_or_prefix]`
+
+Fork an indexed or checked-out Claude Code session in native interactive mode.
+
+Implementation rule:
+
+- default to the checked-out active session when no argument is supplied
+- resolve the optional argument using the same rules as `clfc resume`
+- pass `--resume <full_session_id> --fork-session` to Claude Code
+- reuse the same launcher defaults and overrides as `clfc interactive`
+- support `--dry-run` for verification without launching Claude Code
 
 ### `clfc checkout <session_id_or_prefix>`
 
@@ -916,6 +931,8 @@ At minimum, changes should be validated against:
 - `clfc init` creating local `.clfc/workspace.json`
 - `clfc checkout <session-prefix>` storing the active session pointer
 - `clfc resume --dry-run` using the checked-out active session
+- `clfc fork --dry-run` building `claude --resume <active_session_id> --fork-session`
+- `clfc fork <session-prefix> --dry-run` resolving an indexed session and adding `--fork-session`
 - `clfc name <session-prefix> <display-name>` storing CLFC-owned display names and preserving them across index refreshes
 - `clfc settings set dangerously-skip-permissions on|off` updating CLFC-owned launcher defaults without editing Claude Code settings
 - `clfc add` working for:

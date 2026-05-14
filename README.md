@@ -18,6 +18,7 @@ python -m clfc.cli.main doctor
 python -m clfc.cli.main init
 python -m clfc.cli.main interactive
 python -m clfc.cli.main resume <session-id-or-prefix>
+python -m clfc.cli.main fork <session-id-or-prefix>
 python -m clfc.cli.main checkout <session-id-or-prefix>
 python -m clfc.cli.main current
 python -m clfc.cli.main scan
@@ -69,6 +70,8 @@ Fork an indexed session into a new Claude Code conversation:
 
 ```powershell
 .\clfc.cmd resume 35ebc4da --fork
+.\clfc.cmd fork 35ebc4da
+.\clfc.cmd fork
 ```
 
 Temporarily bypass Claude Code permission checks for one interactive launch:

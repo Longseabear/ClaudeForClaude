@@ -64,6 +64,7 @@ The first production slice is:
 6. `resume` from indexed session prefixes
 7. CLFC-owned display names for stable human selection
 8. local `.clfc/workspace.json` active checkout
+9. native Claude Code fork launcher for indexed or active sessions
 
 Session mutation features such as checkout, templates, and workers should come after the transcript model is stable.
 
