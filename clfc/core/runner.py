@@ -23,6 +23,12 @@ class InteractiveOptions:
     bare: bool = False
     add_dirs: list[str] = field(default_factory=list)
     extra_args: list[str] = field(default_factory=list)
+    print_response: bool = False
+    prompt: str | None = None
+    output_format: str | None = None
+    input_format: str | None = None
+    system_prompt: str | None = None
+    append_system_prompt: str | None = None
 
 
 def build_interactive_command(options: InteractiveOptions) -> list[str]:
@@ -48,6 +54,10 @@ def build_interactive_command(options: InteractiveOptions) -> list[str]:
         command.append("--allow-dangerously-skip-permissions")
     if dangerously_skip:
         command.append("--dangerously-skip-permissions")
+    if options.system_prompt:
+        command.extend(["--system-prompt", options.system_prompt])
+    if options.append_system_prompt:
+        command.extend(["--append-system-prompt", options.append_system_prompt])
     if options.resume:
         command.extend(["--resume", options.resume])
     if options.fork_session:
@@ -60,7 +70,15 @@ def build_interactive_command(options: InteractiveOptions) -> list[str]:
         command.append("--bare")
     for add_dir in options.add_dirs:
         command.extend(["--add-dir", add_dir])
+    if options.print_response:
+        command.append("--print")
+    if options.output_format:
+        command.extend(["--output-format", options.output_format])
+    if options.input_format:
+        command.extend(["--input-format", options.input_format])
     command.extend(options.extra_args)
+    if options.prompt is not None:
+        command.append(options.prompt)
     return command
 
 

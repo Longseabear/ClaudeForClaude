@@ -9,6 +9,7 @@ from typing import Any
 
 RUNTIME_SCHEMA_VERSION = 1
 MEMORY_MODES = {"sync", "manual"}
+PROMPT_MODES = {"off", "append", "replace"}
 
 
 class RuntimeError(ValueError):
@@ -55,6 +56,7 @@ def ensure_session_runtime(record: dict[str, Any], fallback_workspace: Path, roo
     )
     payload.setdefault("created_at", now)
     payload.setdefault("memory_mode", "sync")
+    payload.setdefault("prompt_mode", "off")
     runtime_dir.mkdir(parents=True, exist_ok=True)
     _write_json(path, payload)
     return payload
@@ -147,6 +149,96 @@ def memory_status(record: dict[str, Any], fallback_workspace: Path, root: Path |
     payload["memory_path"] = str(memory_path)
     payload["memory_exists"] = memory_path.exists()
     return payload
+
+
+def set_prompt_mode(
+    record: dict[str, Any],
+    fallback_workspace: Path,
+    mode: str,
+    root: Path | None = None,
+) -> dict[str, Any]:
+    if mode not in PROMPT_MODES:
+        raise RuntimeError(f"Unknown prompt mode {mode!r}. Allowed: {', '.join(sorted(PROMPT_MODES))}")
+    payload = ensure_session_runtime(record, fallback_workspace, root)
+    payload["prompt_mode"] = mode
+    payload["updated_at"] = _now()
+    _write_json(Path(str(payload["runtime_workspace"])) / "session.json", payload)
+    return payload
+
+
+def init_prompt(record: dict[str, Any], fallback_workspace: Path, root: Path | None = None) -> Path:
+    payload = set_prompt_mode(record, fallback_workspace, "append", root)
+    path = Path(str(payload["runtime_workspace"])) / "system_prompt.md"
+    if not path.exists():
+        path.write_text(
+            "# System prompt overlay\n\nAdd session-specific system prompt instructions here.\n",
+            encoding="utf-8",
+        )
+    return path
+
+
+def clone_prompt(record: dict[str, Any], fallback_workspace: Path, source: Path, root: Path | None = None) -> Path:
+    source = source.expanduser().resolve()
+    if not source.is_file():
+        raise RuntimeError(f"Prompt source is not a file: {source}")
+    payload = set_prompt_mode(record, fallback_workspace, "append", root)
+    target = Path(str(payload["runtime_workspace"])) / "system_prompt.md"
+    shutil.copyfile(source, target)
+    return target
+
+
+def save_prompt_text(
+    record: dict[str, Any],
+    fallback_workspace: Path,
+    text: str,
+    *,
+    mode: str = "append",
+    root: Path | None = None,
+) -> Path:
+    payload = set_prompt_mode(record, fallback_workspace, mode, root)
+    target = Path(str(payload["runtime_workspace"])) / "system_prompt.md"
+    target.write_text(text, encoding="utf-8")
+    payload["prompt_rendered_at"] = _now()
+    _write_json(Path(str(payload["runtime_workspace"])) / "session.json", payload)
+    return target
+
+
+def clear_prompt(record: dict[str, Any], fallback_workspace: Path, root: Path | None = None) -> dict[str, Any]:
+    payload = set_prompt_mode(record, fallback_workspace, "off", root)
+    prompt_path = Path(str(payload["runtime_workspace"])) / "system_prompt.md"
+    if prompt_path.exists():
+        prompt_path.unlink()
+    payload.pop("prompt_rendered_at", None)
+    _write_json(Path(str(payload["runtime_workspace"])) / "session.json", payload)
+    return payload
+
+
+def prompt_status(record: dict[str, Any], fallback_workspace: Path, root: Path | None = None) -> dict[str, Any]:
+    payload = ensure_session_runtime(record, fallback_workspace, root)
+    prompt_path = Path(str(payload["runtime_workspace"])) / "system_prompt.md"
+    payload["prompt_path"] = str(prompt_path)
+    payload["prompt_exists"] = prompt_path.exists()
+    return payload
+
+
+def prompt_overrides(
+    record: dict[str, Any],
+    fallback_workspace: Path,
+    root: Path | None = None,
+) -> tuple[str | None, str | None]:
+    payload = ensure_session_runtime(record, fallback_workspace, root)
+    mode = str(payload.get("prompt_mode") or "off")
+    prompt_path = Path(str(payload["runtime_workspace"])) / "system_prompt.md"
+    if mode == "off" or not prompt_path.is_file():
+        return None, None
+    text = prompt_path.read_text(encoding="utf-8-sig")
+    if not text.strip():
+        return None, None
+    if mode == "replace":
+        return text, None
+    if mode == "append":
+        return None, text
+    return None, None
 
 
 def find_nearest_claude_md(start: Path) -> Path | None:

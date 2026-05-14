@@ -3,6 +3,13 @@
 This project is packaged for PyPI as `claude-for-claude`.
 The console script exposed by the package is `clfc`.
 
+GitHub Actions are configured for:
+
+- CI on pushes and pull requests via `.github/workflows/ci.yml`
+- release builds and PyPI Trusted Publishing via `.github/workflows/release.yml`
+
+Trusted Publishing follows the official PyPI pattern: the publish job uses the `pypi` GitHub environment, grants `id-token: write`, downloads the built distributions, and runs `pypa/gh-action-pypi-publish@release/v1`.
+
 ## Preflight
 
 Run from the repository root:
@@ -70,7 +77,18 @@ clfc --help
 
 ## Upload To PyPI
 
-Use a PyPI API token:
+Preferred path: publish a GitHub release after configuring PyPI Trusted Publishing.
+
+Configure the PyPI project trusted publisher with:
+
+- Owner: `Longseabear`
+- Repository: `ClaudeForClaude`
+- Workflow: `release.yml`
+- Environment: `pypi`
+
+Then publish a GitHub release. The release workflow will build, check, and upload the package without a long-lived API token.
+
+Manual fallback: use a PyPI API token:
 
 ```powershell
 python -m twine upload dist/*
@@ -92,5 +110,6 @@ clfc doctor
 4. Run `python -m twine check dist/*`.
 5. Smoke test the wheel in a clean virtual environment.
 6. Upload to TestPyPI if desired.
-7. Upload to PyPI.
-8. Create and push a matching Git tag.
+7. Configure or confirm the PyPI Trusted Publisher.
+8. Publish a GitHub release, or upload to PyPI manually.
+9. Create and push a matching Git tag if the release was not tag-driven.

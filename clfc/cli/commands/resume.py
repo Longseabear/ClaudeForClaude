@@ -40,4 +40,6 @@ def run(args: Namespace) -> int:
         bare=args.bare,
         add_dirs=args.add_dir or [],
         dry_run=args.dry_run,
+        checkout_new=args.checkout_new if args.fork else False,
+        display_name=args.display_name if args.fork else None,
     )

@@ -6,7 +6,9 @@ from clfc.cli.commands import (
     checkout,
     current,
     doctor,
+    execute,
     fork,
+    gc,
     index,
     init,
     inspect,
@@ -15,6 +17,7 @@ from clfc.cli.commands import (
     memory,
     name,
     open as session_open,
+    prompt,
     resume,
     scan,
     settings,
@@ -69,6 +72,46 @@ def build_parser() -> argparse.ArgumentParser:
     interactive_parser.add_argument("extra_args", nargs=argparse.REMAINDER, help="Extra args after `--` are passed to claude.")
     interactive_parser.set_defaults(handler=interactive.run)
 
+    exec_parser = subparsers.add_parser(
+        "exec",
+        help="Run a non-interactive prompt against the checked-out or selected session.",
+    )
+    exec_parser.add_argument("prompt", nargs="*", help="Prompt text. Quote it as one argument for best results.")
+    exec_parser.add_argument("--session", help="Session id, unique prefix, or display name. Defaults to the checked-out session.")
+    exec_parser.add_argument("--workspace", help="Workspace path to resolve within. Defaults to the current directory.")
+    exec_parser.add_argument("-a", "--all", action="store_true", help="Resolve across all indexed workspaces.")
+    exec_parser.add_argument("--refresh", action="store_true", help="Refresh the index before resolving.")
+    exec_parser.add_argument("--prompt-file", help="Read prompt text from a file.")
+    exec_parser.add_argument("--template", help="Render a prompt template file before execution.")
+    exec_parser.add_argument("--var", action="append", help="Template variable in key=value form. Repeatable.")
+    exec_parser.add_argument("--vars-json", action="append", help="Template variables as JSON, @path, or a JSON file path. Repeatable.")
+    exec_parser.add_argument("--fork", action="store_true", help="Fork the session for this execution.")
+    exec_parser.add_argument("--checkout-new", action="store_true", help="After a successful fork, checkout the new forked session if detected.")
+    exec_parser.add_argument("--display-name", help="After a successful fork, assign this CLFC display name to the new session.")
+    exec_parser.add_argument("--output-format", choices=["text", "json", "stream-json"], help="Claude Code non-interactive output format.")
+    exec_parser.add_argument("--model", help="Claude Code model override.")
+    exec_parser.add_argument("--effort", choices=["low", "medium", "high", "xhigh", "max"], help="Effort override.")
+    exec_parser.add_argument(
+        "--permission-mode",
+        choices=["acceptEdits", "auto", "bypassPermissions", "default", "dontAsk", "plan"],
+        help="Claude Code permission mode override.",
+    )
+    exec_parser.add_argument(
+        "--dangerously-skip-permissions",
+        action="store_true",
+        help="Bypass all Claude Code permission checks for this execution.",
+    )
+    exec_parser.add_argument(
+        "--allow-dangerously-skip-permissions",
+        action="store_true",
+        help="Allow bypass mode to be selected in Claude Code without enabling it by default.",
+    )
+    exec_parser.add_argument("--name", help="Set Claude Code session display name.")
+    exec_parser.add_argument("--bare", action="store_true", help="Launch Claude Code in bare mode.")
+    exec_parser.add_argument("--add-dir", action="append", help="Additional directory to allow. Repeatable.")
+    exec_parser.add_argument("--dry-run", action="store_true", help="Print the claude command without launching it.")
+    exec_parser.set_defaults(handler=execute.run)
+
     resume_parser = subparsers.add_parser(
         "resume",
         help="Resume an indexed Claude Code session by id or unique prefix.",
@@ -99,6 +142,8 @@ def build_parser() -> argparse.ArgumentParser:
     resume_parser.add_argument("--bare", action="store_true", help="Launch Claude Code in bare mode.")
     resume_parser.add_argument("--add-dir", action="append", help="Additional directory to allow. Repeatable.")
     resume_parser.add_argument("--dry-run", action="store_true", help="Print the claude command without launching it.")
+    resume_parser.add_argument("--checkout-new", action="store_true", help="With --fork, checkout the new forked session if detected.")
+    resume_parser.add_argument("--display-name", help="With --fork, assign this CLFC display name to the new session.")
     resume_parser.set_defaults(handler=resume.run)
 
     fork_parser = subparsers.add_parser(
@@ -130,6 +175,8 @@ def build_parser() -> argparse.ArgumentParser:
     fork_parser.add_argument("--bare", action="store_true", help="Launch Claude Code in bare mode.")
     fork_parser.add_argument("--add-dir", action="append", help="Additional directory to allow. Repeatable.")
     fork_parser.add_argument("--dry-run", action="store_true", help="Print the claude command without launching it.")
+    fork_parser.add_argument("--checkout-new", action="store_true", help="After launch, checkout the new forked session if detected.")
+    fork_parser.add_argument("--display-name", help="After launch, assign this CLFC display name to the new session.")
     fork_parser.set_defaults(handler=fork.run)
 
     checkout_parser = subparsers.add_parser("checkout", help="Set the active CLFC session for this workspace.")
@@ -174,6 +221,46 @@ def build_parser() -> argparse.ArgumentParser:
     memory_mode.add_argument("mode", choices=["sync", "manual"])
     _add_memory_target_args(memory_mode)
     memory_mode.set_defaults(handler=memory.run)
+
+    prompt_parser = subparsers.add_parser("prompt", help="Manage session prompt overlays and render prompt templates.")
+    prompt_subparsers = prompt_parser.add_subparsers(dest="prompt_command")
+
+    prompt_status = prompt_subparsers.add_parser("status", help="Show session prompt overlay status.")
+    _add_prompt_target_args(prompt_status)
+    prompt_status.set_defaults(handler=prompt.run)
+
+    prompt_init = prompt_subparsers.add_parser("init", help="Create a session-local system_prompt.md overlay.")
+    _add_prompt_target_args(prompt_init)
+    prompt_init.set_defaults(handler=prompt.run)
+
+    prompt_clone = prompt_subparsers.add_parser("clone", help="Copy a file into session-local system_prompt.md.")
+    prompt_clone.add_argument("source", help="Source prompt markdown file.")
+    _add_prompt_target_args(prompt_clone)
+    prompt_clone.set_defaults(handler=prompt.run)
+
+    prompt_clear = prompt_subparsers.add_parser("clear", help="Remove session prompt overlay and turn prompt mode off.")
+    _add_prompt_target_args(prompt_clear)
+    prompt_clear.set_defaults(handler=prompt.run)
+
+    prompt_mode = prompt_subparsers.add_parser("mode", help="Set prompt overlay mode for a session.")
+    prompt_mode.add_argument("mode", choices=["off", "append", "replace"])
+    _add_prompt_target_args(prompt_mode)
+    prompt_mode.set_defaults(handler=prompt.run)
+
+    prompt_render = prompt_subparsers.add_parser("render", help="Render a prompt template with dictionary values.")
+    prompt_render.add_argument("template", help="Template file. Use {key} placeholders.")
+    prompt_render.add_argument("--var", action="append", help="Template variable in key=value form. Repeatable.")
+    prompt_render.add_argument("--vars-json", action="append", help="Template variables as JSON, @path, or a JSON file path. Repeatable.")
+    prompt_render.add_argument("--out", help="Write rendered prompt to this path instead of stdout.")
+    prompt_render.set_defaults(handler=prompt.run)
+
+    prompt_apply = prompt_subparsers.add_parser("apply", help="Render a template into session-local system_prompt.md.")
+    prompt_apply.add_argument("template", help="Template file. Use {key} placeholders.")
+    prompt_apply.add_argument("--var", action="append", help="Template variable in key=value form. Repeatable.")
+    prompt_apply.add_argument("--vars-json", action="append", help="Template variables as JSON, @path, or a JSON file path. Repeatable.")
+    prompt_apply.add_argument("--mode", choices=["append", "replace"], default="append", help="Prompt overlay mode to set after applying.")
+    _add_prompt_target_args(prompt_apply)
+    prompt_apply.set_defaults(handler=prompt.run)
 
     name_parser = subparsers.add_parser("name", help="Show or set a CLFC display name for an indexed session.")
     name_parser.add_argument("session", help="Session id, unique prefix, or existing display name.")
@@ -229,6 +316,17 @@ def build_parser() -> argparse.ArgumentParser:
     list_parser.add_argument("--limit", type=int, default=20, help="Maximum records to print in table mode.")
     list_parser.set_defaults(handler=list.run)
 
+    gc_parser = subparsers.add_parser(
+        "gc",
+        aliases=["prune"],
+        help="Find stale CLFC index records and runtime workspaces.",
+    )
+    gc_parser.add_argument("--workspace", help="Workspace path to clean. Defaults to the current directory.")
+    gc_parser.add_argument("-a", "--all", action="store_true", help="Scan all indexed workspaces and runtime dirs.")
+    gc_parser.add_argument("--apply", action="store_true", help="Remove stale CLFC-owned files. Default is dry-run.")
+    gc_parser.add_argument("--json", action="store_true", help="Print machine-readable JSON.")
+    gc_parser.set_defaults(handler=gc.run)
+
     open_parser = subparsers.add_parser(
         "open",
         help="Pick an indexed session and resume, fork, inspect, checkout, or name it.",
@@ -243,7 +341,7 @@ def build_parser() -> argparse.ArgumentParser:
         choices=["resume", "fork", "inspect", "checkout", "name", "quit"],
         help="Action to run after selecting a session.",
     )
-    open_parser.add_argument("--display-name", help="Display name to set with `--action name`.")
+    open_parser.add_argument("--display-name", help="Display name for name action or post-fork naming.")
     open_parser.add_argument("--launch-name", help="Claude Code session name for resume or fork launches.")
     open_parser.add_argument("--model", help="Claude Code model override.")
     open_parser.add_argument("--effort", choices=["low", "medium", "high", "xhigh", "max"], help="Effort override.")
@@ -265,6 +363,7 @@ def build_parser() -> argparse.ArgumentParser:
     open_parser.add_argument("--bare", action="store_true", help="Launch Claude Code in bare mode.")
     open_parser.add_argument("--add-dir", action="append", help="Additional directory to allow. Repeatable.")
     open_parser.add_argument("--dry-run", action="store_true", help="Print the claude command without launching it.")
+    open_parser.add_argument("--checkout-new", action="store_true", help="With fork action, checkout the new forked session if detected.")
     open_parser.set_defaults(handler=session_open.run)
 
     inspect_parser = subparsers.add_parser("inspect", help="Show a redacted event timeline for one session.")
@@ -278,6 +377,14 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def _add_memory_target_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("session", nargs="?", help="Session id, unique prefix, or display name. Defaults to the checked-out session.")
+    parser.add_argument("--workspace", help="Workspace path. Defaults to the current directory.")
+    parser.add_argument("-a", "--all", action="store_true", help="Resolve across all indexed workspaces.")
+    parser.add_argument("--refresh", action="store_true", help="Refresh the index before resolving.")
+    parser.add_argument("--json", action="store_true", help="Print machine-readable JSON.")
+
+
+def _add_prompt_target_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("session", nargs="?", help="Session id, unique prefix, or display name. Defaults to the checked-out session.")
     parser.add_argument("--workspace", help="Workspace path. Defaults to the current directory.")
     parser.add_argument("-a", "--all", action="store_true", help="Resolve across all indexed workspaces.")

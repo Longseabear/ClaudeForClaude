@@ -60,15 +60,18 @@ See `docs/installation.md` for pipx, PATH troubleshooting, first-run setup, and 
 clfc doctor
 clfc init
 clfc interactive
+clfc exec "<prompt>"
 clfc resume <session-id-or-prefix>
 clfc fork <session-id-or-prefix>
 clfc checkout <session-id-or-prefix>
 clfc current
 clfc memory status
+clfc prompt status
 clfc scan
 clfc index
 clfc list
 clfc open
+clfc gc
 clfc name <session-id-or-prefix> <display-name>
 clfc inspect <session-id-or-prefix>
 clfc settings show
@@ -114,6 +117,32 @@ Launch Claude Code interactively with CLFC defaults:
 clfc interactive
 ```
 
+Run one non-interactive prompt against the checked-out session:
+
+```powershell
+clfc exec "Summarize this repository and suggest the next implementation step."
+clfc exec --session 35ebc4da "Review the current diff."
+clfc exec --fork --checkout-new --display-name review-pass "Review this branch without mutating the original session."
+```
+
+Render a prompt template with dictionary values:
+
+```powershell
+# prompts\review.md can contain: Review {target} for {focus}.
+clfc prompt render .\prompts\review.md --var target=clfc/core/runner.py --var focus=security
+clfc prompt render .\prompts\review.md --vars-json '{"target":"README.md","focus":"clarity"}'
+clfc exec --template .\prompts\review.md --var target=README.md --var focus=clarity
+```
+
+Apply a rendered template as a session-local system prompt overlay:
+
+```powershell
+clfc prompt apply .\prompts\reviewer.md --var tone=concise --mode append
+clfc prompt status
+clfc prompt mode replace
+clfc prompt clear
+```
+
 Resume an indexed Claude Code session from `list`:
 
 ```powershell
@@ -153,6 +182,7 @@ Fork an indexed session into a new Claude Code conversation:
 clfc resume 35ebc4da --fork
 clfc fork 35ebc4da
 clfc fork
+clfc fork 35ebc4da --checkout-new --display-name experiment
 ```
 
 Temporarily bypass Claude Code permission checks for one interactive launch:
@@ -183,6 +213,13 @@ clfc memory clone C:\path\to\CLAUDE.md
 clfc memory clear
 ```
 
+Find stale CLFC-owned index/runtime files:
+
+```powershell
+clfc gc
+clfc gc --apply
+```
+
 In `sync` mode, `resume` and `fork` run Claude from a per-session runtime workspace under `%USERPROFILE%\.clfc\...`, copy the nearest project `CLAUDE.md` into that runtime workspace, and add the real project directory with `--add-dir`.
 
 This default is intentionally stored in CLFC's own settings file under `%LOCALAPPDATA%\clfc\settings.json`, not in Claude Code's global settings.
@@ -205,6 +242,7 @@ python -m twine check dist/*
 ```
 
 See `docs/publishing.md` for the full PyPI release checklist.
+CI runs on GitHub Actions, and `release.yml` is ready for PyPI Trusted Publishing with the `pypi` environment.
 
 ## Key Documents
 

@@ -111,6 +111,8 @@ def _launch(record: dict[str, object], workspace: Path, args: Namespace, *, fork
         bare=args.bare,
         add_dirs=args.add_dir or [],
         dry_run=args.dry_run,
+        checkout_new=args.checkout_new if fork_session else False,
+        display_name=args.display_name if fork_session else None,
     )
 
 

@@ -178,11 +178,15 @@ clfc doctor
 clfc init
 clfc interactive
 clfc interactive --dangerously-skip-permissions
+clfc exec "<prompt>"
+clfc exec --template <path> --var key=value
+clfc exec --fork --checkout-new --display-name <display_name> "<prompt>"
 clfc resume <session_id_or_prefix>
 clfc resume
 clfc resume <session_id_or_prefix> --fork
 clfc fork
 clfc fork <session_id_or_prefix>
+clfc fork <session_id_or_prefix> --checkout-new --display-name <display_name>
 clfc checkout <session_id_or_prefix>
 clfc current
 clfc memory status
@@ -191,6 +195,11 @@ clfc memory mode manual
 clfc memory init
 clfc memory clone <path>
 clfc memory clear
+clfc prompt status
+clfc prompt render <template> --var key=value
+clfc prompt apply <template> --vars-json <json_or_path>
+clfc prompt mode off|append|replace
+clfc prompt clear
 clfc settings show
 clfc settings set dangerously-skip-permissions on
 clfc settings set permission-mode bypassPermissions
@@ -198,6 +207,8 @@ clfc scan
 clfc index
 clfc list
 clfc open
+clfc gc
+clfc gc --apply
 clfc name <session_id_or_prefix> <display_name>
 clfc inspect <session_id_or_prefix>
 ```

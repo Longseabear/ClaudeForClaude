@@ -70,6 +70,26 @@ class SettingsAndRunnerTests(unittest.TestCase):
 
         self.assertIn("--dangerously-skip-permissions", command)
 
+    def test_build_print_command_supports_prompt_and_system_overlay(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            with patch.dict(os.environ, {"CLFC_DATA_DIR": temp_dir}):
+                command = build_interactive_command(
+                    InteractiveOptions(
+                        workspace=Path(temp_dir),
+                        resume="session-123",
+                        print_response=True,
+                        output_format="json",
+                        append_system_prompt="Be brief.",
+                        prompt="Summarize the repo.",
+                    )
+                )
+
+        self.assertIn("--print", command)
+        self.assertIn("--output-format", command)
+        self.assertIn("json", command)
+        self.assertIn("--append-system-prompt", command)
+        self.assertEqual(command[-1], "Summarize the repo.")
+
 
 if __name__ == "__main__":
     unittest.main()
