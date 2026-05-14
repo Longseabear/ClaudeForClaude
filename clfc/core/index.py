@@ -11,6 +11,7 @@ from clfc.core.summaries import TranscriptSummary
 from clfc.utils.hashing import workspace_hash
 
 SCHEMA_VERSION = 1
+PRESERVED_RECORD_KEYS = ("display_name", "named_at")
 
 
 @dataclass
@@ -65,7 +66,10 @@ def write_index(summaries: list[TranscriptSummary], data_root: Path | None = Non
         record = summary_to_record(summary, indexed_at=indexed_at)
         workspace_dir = root / "workspaces" / record["workspace_hash"]
         workspace_dir.mkdir(parents=True, exist_ok=True)
-        _write_json(workspace_dir / f"{summary.session_id}.json", record)
+        record_path = workspace_dir / f"{summary.session_id}.json"
+        existing = _read_record(record_path)
+        _preserve_record_fields(record, existing)
+        _write_json(record_path, record)
         indexed.append(record)
 
     root.mkdir(parents=True, exist_ok=True)
@@ -112,6 +116,18 @@ def read_all_records(data_root: Path | None = None) -> list[dict[str, Any]]:
     return sorted(records, key=lambda record: record.get("updated_at") or "", reverse=True)
 
 
+def write_record(record: dict[str, Any], data_root: Path | None = None) -> Path:
+    root = (data_root or clfc_data_root()).expanduser().resolve()
+    workspace_hash_value = str(record.get("workspace_hash") or "")
+    session_id = str(record.get("session_id") or "")
+    if not workspace_hash_value or not session_id:
+        raise ValueError("Indexed records require workspace_hash and session_id.")
+    path = root / "workspaces" / workspace_hash_value / f"{session_id}.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    _write_json(path, record)
+    return path
+
+
 def resolve_record(
     session: str,
     workspace: Path,
@@ -133,9 +149,48 @@ def resolve_record(
     return matches[0]
 
 
+def set_display_name(
+    session: str,
+    display_name: str | None,
+    workspace: Path,
+    all_workspaces: bool = False,
+    data_root: Path | None = None,
+) -> dict[str, Any]:
+    record = resolve_record(session, workspace=workspace, all_workspaces=all_workspaces, data_root=data_root)
+    normalized_name = display_name.strip() if display_name is not None else None
+    if normalized_name == "":
+        normalized_name = None
+    if normalized_name is not None:
+        _assert_unique_display_name(normalized_name, record, workspace, all_workspaces, data_root)
+        record["display_name"] = normalized_name
+        record["named_at"] = _now()
+    else:
+        record.pop("display_name", None)
+        record.pop("named_at", None)
+    write_record(record, data_root)
+    return record
+
+
 def _matches_session(session: str, record: dict[str, Any]) -> bool:
     session_id = str(record.get("session_id") or "")
-    return session_id == session or session_id.startswith(session)
+    display_name = str(record.get("display_name") or "")
+    return session_id == session or session_id.startswith(session) or display_name == session or display_name.startswith(session)
+
+
+def _assert_unique_display_name(
+    display_name: str,
+    target_record: dict[str, Any],
+    workspace: Path,
+    all_workspaces: bool,
+    data_root: Path | None,
+) -> None:
+    records = read_all_records(data_root) if all_workspaces else read_workspace_records(workspace, data_root)
+    target_id = str(target_record.get("session_id") or "")
+    for record in records:
+        if str(record.get("session_id") or "") == target_id:
+            continue
+        if str(record.get("display_name") or "") == display_name:
+            raise ResolveError(f"Display name {display_name!r} is already used by {record.get('session_id')}.")
 
 
 def _read_records(workspace_dir: Path) -> list[dict[str, Any]]:
@@ -150,6 +205,24 @@ def _read_records(workspace_dir: Path) -> list[dict[str, Any]]:
         if isinstance(payload, dict):
             records.append(payload)
     return records
+
+
+def _read_record(path: Path) -> dict[str, Any] | None:
+    if not path.exists():
+        return None
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8-sig"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    return payload if isinstance(payload, dict) else None
+
+
+def _preserve_record_fields(record: dict[str, Any], existing: dict[str, Any] | None) -> None:
+    if not existing:
+        return
+    for key in PRESERVED_RECORD_KEYS:
+        if existing.get(key):
+            record[key] = existing[key]
 
 
 def _write_json(path: Path, payload: dict[str, Any]) -> None:

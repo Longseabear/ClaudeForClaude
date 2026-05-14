@@ -34,6 +34,7 @@ def run(args: Namespace) -> int:
         rows.append(
             [
                 _short(str(record.get("session_id", ""))),
+                str(record.get("display_name") or ""),
                 _short(str(record.get("workspace_hash", "")), 6) if args.all else "",
                 record.get("updated_at") or "",
                 _models(record.get("model_counts")),
@@ -46,7 +47,7 @@ def run(args: Namespace) -> int:
             ]
         )
 
-    headers = ["session"]
+    headers = ["session", "name"]
     if args.all:
         headers.append("ws")
     headers.extend(["updated", "models", "user", "asst", "tools", "errs", "in_tok", "out_tok"])
@@ -59,7 +60,7 @@ def run(args: Namespace) -> int:
 def _trim_workspace_column(rows: list[list[object]], include_workspace: bool) -> list[list[object]]:
     if include_workspace:
         return rows
-    return [[row[0], *row[2:]] for row in rows]
+    return [[row[0], row[1], *row[3:]] for row in rows]
 
 
 def _short(value: str, length: int = 8) -> str:

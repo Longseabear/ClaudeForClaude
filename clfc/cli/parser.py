@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import argparse
 
-from clfc.cli.commands import doctor, index, inspect, interactive, list, resume, scan, settings
+from clfc.cli.commands import doctor, index, inspect, interactive, list, name, resume, scan, settings
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -79,6 +79,16 @@ def build_parser() -> argparse.ArgumentParser:
     resume_parser.add_argument("--add-dir", action="append", help="Additional directory to allow. Repeatable.")
     resume_parser.add_argument("--dry-run", action="store_true", help="Print the claude command without launching it.")
     resume_parser.set_defaults(handler=resume.run)
+
+    name_parser = subparsers.add_parser("name", help="Show or set a CLFC display name for an indexed session.")
+    name_parser.add_argument("session", help="Session id, unique prefix, or existing display name.")
+    name_parser.add_argument("display_name", nargs="?", help="Display name to store in the CLFC index.")
+    name_parser.add_argument("--clear", action="store_true", help="Remove the display name.")
+    name_parser.add_argument("--workspace", help="Workspace path to resolve within. Defaults to the current directory.")
+    name_parser.add_argument("-a", "--all", action="store_true", help="Resolve across all indexed workspaces.")
+    name_parser.add_argument("--refresh", action="store_true", help="Refresh the index before resolving.")
+    name_parser.add_argument("--json", action="store_true", help="Print machine-readable JSON.")
+    name_parser.set_defaults(handler=name.run)
 
     settings_parser = subparsers.add_parser("settings", help="Show or update CLFC launcher defaults.")
     settings_subparsers = settings_parser.add_subparsers(dest="settings_command")

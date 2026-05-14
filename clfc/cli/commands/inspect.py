@@ -5,6 +5,7 @@ import sys
 from argparse import Namespace
 from pathlib import Path
 
+from clfc.core.index import ResolveError, resolve_record
 from clfc.core.paths import iter_transcript_files, workspace_transcripts
 from clfc.core.transcript import summarize_transcript
 from clfc.utils.output import format_table
@@ -55,6 +56,17 @@ def _resolve_session(args: Namespace) -> Path | None:
         return candidate.resolve()
 
     workspace = Path(args.workspace).expanduser().resolve() if args.workspace else Path.cwd()
+    try:
+        record = resolve_record(raw, workspace=workspace, all_workspaces=args.all)
+    except ResolveError as error:
+        if not str(error).startswith("No indexed session matched"):
+            print(str(error), file=sys.stderr)
+            return None
+    else:
+        indexed_path = Path(str(record.get("path") or "")).expanduser()
+        if indexed_path.exists():
+            return indexed_path.resolve()
+
     files = iter_transcript_files() if args.all else workspace_transcripts(workspace)
     matches = [path for path in files if path.stem == raw or path.stem.startswith(raw)]
     if not matches:

@@ -20,6 +20,7 @@ python -m clfc.cli.main resume <session-id-or-prefix>
 python -m clfc.cli.main scan
 python -m clfc.cli.main index
 python -m clfc.cli.main list
+python -m clfc.cli.main name <session-id-or-prefix> <display-name>
 python -m clfc.cli.main inspect <session-id-or-prefix>
 python -m clfc.cli.main settings show
 ```
@@ -42,6 +43,14 @@ Resume an indexed Claude Code session from `list`:
 .\clfc.cmd index
 .\clfc.cmd list
 .\clfc.cmd resume 35ebc4da
+```
+
+Give a session a CLFC-owned display name:
+
+```powershell
+.\clfc.cmd name 35ebc4da main
+.\clfc.cmd resume main
+.\clfc.cmd name main --clear
 ```
 
 Fork an indexed session into a new Claude Code conversation:

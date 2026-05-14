@@ -185,6 +185,7 @@ clfc settings set permission-mode bypassPermissions
 clfc scan
 clfc index
 clfc list
+clfc name <session_id_or_prefix> <display_name>
 clfc inspect <session_id_or_prefix>
 ```
 
@@ -203,6 +204,8 @@ clfc list
 clfc list -t
 clfc list -a
 clfc list --refresh
+clfc name <session_id_or_prefix> <display_name>
+clfc name <session_id_or_prefix> --clear
 clfc status
 clfc status -a
 clfc status --refresh
@@ -518,6 +521,20 @@ Implementation rule:
 - reuse the same launcher defaults and overrides as `clfc interactive`
 - support `--fork` by adding Claude Code's `--fork-session`
 - support `--dry-run` for verification without launching Claude Code
+
+### `clfc name <session_id_or_prefix> <display_name>`
+
+Set a CLFC-owned display name for an indexed session.
+
+Implementation rule:
+
+- resolve the session from the CLFC index by full id, unique prefix, or existing display name
+- store `display_name` in the indexed session record
+- preserve `display_name` across `clfc index` refreshes
+- reject duplicate display names in the selected scope
+- let `clfc list`, `clfc inspect`, and `clfc resume` resolve sessions by display name
+- support `--clear` to remove the display name
+- do not mutate Claude Code transcripts
 
 ### `clfc settings show`
 
@@ -856,6 +873,7 @@ At minimum, changes should be validated against:
 - `clfc interactive --dangerously-skip-permissions --dry-run` adding Claude Code's bypass flag explicitly
 - `clfc resume <session-prefix> --dry-run` resolving an indexed session and building `claude --resume <full_session_id>`
 - `clfc resume <session-prefix> --fork --dry-run` adding `--fork-session`
+- `clfc name <session-prefix> <display-name>` storing CLFC-owned display names and preserving them across index refreshes
 - `clfc settings set dangerously-skip-permissions on|off` updating CLFC-owned launcher defaults without editing Claude Code settings
 - `clfc add` working for:
   - a pending new Claude Code session UUID

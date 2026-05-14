@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from clfc.core.index import ResolveError, read_workspace_records, resolve_record, write_index
+from clfc.core.index import ResolveError, read_workspace_records, resolve_record, set_display_name, write_index
 from clfc.core.transcript import summarize_transcript
 
 
@@ -132,6 +132,68 @@ class IndexTests(unittest.TestCase):
 
             with self.assertRaises(ResolveError):
                 resolve_record("abcdef", workspace, data_root=root / "clfc-data")
+
+    def test_display_name_resolves_and_survives_reindex(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            transcript = root / "projects" / "encoded" / "abcdef12-0000-4000-8000-000000000000.jsonl"
+            transcript.parent.mkdir(parents=True)
+            _write_jsonl(
+                transcript,
+                [
+                    {
+                        "type": "user",
+                        "sessionId": "abcdef12-0000-4000-8000-000000000000",
+                        "timestamp": "2026-01-01T00:00:00Z",
+                        "cwd": str(workspace),
+                        "message": {"role": "user", "content": "secret"},
+                    }
+                ],
+            )
+            data_root = root / "clfc-data"
+            summary = summarize_transcript(transcript)
+            write_index([summary], data_root=data_root)
+            set_display_name("abcdef12", "main", workspace, data_root=data_root)
+            write_index([summary], data_root=data_root)
+
+            record = resolve_record("main", workspace, data_root=data_root)
+
+        self.assertEqual(record["session_id"], "abcdef12-0000-4000-8000-000000000000")
+        self.assertEqual(record["display_name"], "main")
+
+    def test_duplicate_display_name_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            workspace = root / "workspace"
+            workspace.mkdir()
+            transcripts = []
+            for session_id in [
+                "aaaaaa12-0000-4000-8000-000000000000",
+                "bbbbbb12-0000-4000-8000-000000000000",
+            ]:
+                transcript = root / "projects" / "encoded" / f"{session_id}.jsonl"
+                transcript.parent.mkdir(parents=True, exist_ok=True)
+                _write_jsonl(
+                    transcript,
+                    [
+                        {
+                            "type": "user",
+                            "sessionId": session_id,
+                            "timestamp": "2026-01-01T00:00:00Z",
+                            "cwd": str(workspace),
+                            "message": {"role": "user", "content": "secret"},
+                        }
+                    ],
+                )
+                transcripts.append(transcript)
+            data_root = root / "clfc-data"
+            write_index([summarize_transcript(path) for path in transcripts], data_root=data_root)
+            set_display_name("aaaaaa12", "main", workspace, data_root=data_root)
+
+            with self.assertRaises(ResolveError):
+                set_display_name("bbbbbb12", "main", workspace, data_root=data_root)
 
 
 def _write_jsonl(path: Path, records: list[dict[str, object]]) -> None:
