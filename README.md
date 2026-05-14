@@ -25,6 +25,7 @@ python -m clfc.cli.main memory status
 python -m clfc.cli.main scan
 python -m clfc.cli.main index
 python -m clfc.cli.main list
+python -m clfc.cli.main open
 python -m clfc.cli.main name <session-id-or-prefix> <display-name>
 python -m clfc.cli.main inspect <session-id-or-prefix>
 python -m clfc.cli.main settings show
@@ -48,6 +49,14 @@ Resume an indexed Claude Code session from `list`:
 .\clfc.cmd index
 .\clfc.cmd list
 .\clfc.cmd resume 35ebc4da
+```
+
+Pick an indexed session from a numbered menu:
+
+```powershell
+.\clfc.cmd open
+.\clfc.cmd open --select 1 --action checkout
+.\clfc.cmd open --select 1 --action resume --dry-run
 ```
 
 Check out a session as the active workspace session, then resume it without an argument:

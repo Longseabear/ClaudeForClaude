@@ -2,7 +2,23 @@ from __future__ import annotations
 
 import argparse
 
-from clfc.cli.commands import checkout, current, doctor, fork, index, init, inspect, interactive, list, memory, name, resume, scan, settings
+from clfc.cli.commands import (
+    checkout,
+    current,
+    doctor,
+    fork,
+    index,
+    init,
+    inspect,
+    interactive,
+    list,
+    memory,
+    name,
+    open as session_open,
+    resume,
+    scan,
+    settings,
+)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -212,6 +228,44 @@ def build_parser() -> argparse.ArgumentParser:
     list_parser.add_argument("--json", action="store_true", help="Print machine-readable JSON.")
     list_parser.add_argument("--limit", type=int, default=20, help="Maximum records to print in table mode.")
     list_parser.set_defaults(handler=list.run)
+
+    open_parser = subparsers.add_parser(
+        "open",
+        help="Pick an indexed session and resume, fork, inspect, checkout, or name it.",
+    )
+    open_parser.add_argument("--workspace", help="Workspace path to match. Defaults to the current directory.")
+    open_parser.add_argument("-a", "--all", action="store_true", help="Open sessions across all indexed workspaces.")
+    open_parser.add_argument("--refresh", action="store_true", help="Refresh the index before listing.")
+    open_parser.add_argument("--limit", type=int, default=20, help="Maximum records to show.")
+    open_parser.add_argument("--select", type=int, help="1-based session number to select without prompting.")
+    open_parser.add_argument(
+        "--action",
+        choices=["resume", "fork", "inspect", "checkout", "name", "quit"],
+        help="Action to run after selecting a session.",
+    )
+    open_parser.add_argument("--display-name", help="Display name to set with `--action name`.")
+    open_parser.add_argument("--launch-name", help="Claude Code session name for resume or fork launches.")
+    open_parser.add_argument("--model", help="Claude Code model override.")
+    open_parser.add_argument("--effort", choices=["low", "medium", "high", "xhigh", "max"], help="Effort override.")
+    open_parser.add_argument(
+        "--permission-mode",
+        choices=["acceptEdits", "auto", "bypassPermissions", "default", "dontAsk", "plan"],
+        help="Claude Code permission mode override.",
+    )
+    open_parser.add_argument(
+        "--dangerously-skip-permissions",
+        action="store_true",
+        help="Bypass all Claude Code permission checks for resume or fork launches.",
+    )
+    open_parser.add_argument(
+        "--allow-dangerously-skip-permissions",
+        action="store_true",
+        help="Allow bypass mode to be selected in Claude Code without enabling it by default.",
+    )
+    open_parser.add_argument("--bare", action="store_true", help="Launch Claude Code in bare mode.")
+    open_parser.add_argument("--add-dir", action="append", help="Additional directory to allow. Repeatable.")
+    open_parser.add_argument("--dry-run", action="store_true", help="Print the claude command without launching it.")
+    open_parser.set_defaults(handler=session_open.run)
 
     inspect_parser = subparsers.add_parser("inspect", help="Show a redacted event timeline for one session.")
     inspect_parser.add_argument("session", help="Session id, unique prefix, or transcript JSONL path.")
