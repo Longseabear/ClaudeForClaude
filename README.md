@@ -16,6 +16,8 @@ The project is currently in the design and discovery phase. Its first goal is to
 ```powershell
 python -m clfc.cli.main doctor
 python -m clfc.cli.main scan
+python -m clfc.cli.main index
+python -m clfc.cli.main list
 python -m clfc.cli.main inspect <session-id-or-prefix>
 ```
 
@@ -25,7 +27,7 @@ On Windows, the local launcher also works:
 .\clfc.cmd scan
 ```
 
-`scan` and `inspect` are intentionally redacted. They summarize record types, block types, tool names, errors, models, and token usage without printing prompt text, tool output, thinking text, or attachment content.
+`scan`, `index`, `list`, and `inspect` are intentionally redacted. They summarize record types, block types, tool names, errors, models, and token usage without printing prompt text, tool output, thinking text, or attachment content.
 
 ## Development
 

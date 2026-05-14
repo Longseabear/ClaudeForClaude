@@ -176,6 +176,8 @@ The current implemented slice is intentionally smaller than the long-term comman
 ```bash
 clfc doctor
 clfc scan
+clfc index
+clfc list
 clfc inspect <session_id_or_prefix>
 ```
 
