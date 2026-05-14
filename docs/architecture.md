@@ -61,6 +61,7 @@ The first production slice is:
 3. `inspect`
 4. privacy-preserving local index
 5. fast `list` from that index
+6. `resume` from indexed session prefixes
 
 Session mutation features such as checkout, templates, and workers should come after the transcript model is stable.
 

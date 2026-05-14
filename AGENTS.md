@@ -177,6 +177,8 @@ The current implemented slice is intentionally smaller than the long-term comman
 clfc doctor
 clfc interactive
 clfc interactive --dangerously-skip-permissions
+clfc resume <session_id_or_prefix>
+clfc resume <session_id_or_prefix> --fork
 clfc settings show
 clfc settings set dangerously-skip-permissions on
 clfc settings set permission-mode bypassPermissions
@@ -220,6 +222,9 @@ clfc model --list
 clfc interactive
 clfc interactive --dangerously-skip-permissions
 clfc interactive --permission-mode bypassPermissions
+clfc resume <session_id_or_prefix>
+clfc resume <session_id_or_prefix> --fork
+clfc resume <session_id_or_prefix> --dangerously-skip-permissions
 clfc settings show
 clfc settings set model <model>
 clfc settings set effort <level>
@@ -496,6 +501,22 @@ Implementation rule:
 - load CLFC launcher defaults from `%LOCALAPPDATA%\clfc\settings.json`
 - support per-launch overrides for `--model`, `--effort`, `--permission-mode`, `--dangerously-skip-permissions`, `--allow-dangerously-skip-permissions`, `--resume`, `--continue`, `--name`, `--bare`, and `--add-dir`
 - pass arguments after `--` directly to Claude Code
+- support `--dry-run` for verification without launching Claude Code
+
+### `clfc resume <session_id_or_prefix>`
+
+Resume an indexed Claude Code session in native interactive mode.
+
+Implementation rule:
+
+- resolve the session from the CLFC index by full id or unique prefix
+- default the lookup scope to the current workspace
+- support `--all` to resolve across indexed workspaces
+- support `--refresh` to rebuild the relevant index before resolving
+- launch from the indexed transcript `cwd` when it still exists
+- pass `--resume <full_session_id>` to Claude Code
+- reuse the same launcher defaults and overrides as `clfc interactive`
+- support `--fork` by adding Claude Code's `--fork-session`
 - support `--dry-run` for verification without launching Claude Code
 
 ### `clfc settings show`
@@ -833,6 +854,8 @@ At minimum, changes should be validated against:
 - `clfc model --list` showing local model configuration sources without inventing Codex profiles
 - `clfc interactive --dry-run` building a native Claude Code interactive command
 - `clfc interactive --dangerously-skip-permissions --dry-run` adding Claude Code's bypass flag explicitly
+- `clfc resume <session-prefix> --dry-run` resolving an indexed session and building `claude --resume <full_session_id>`
+- `clfc resume <session-prefix> --fork --dry-run` adding `--fork-session`
 - `clfc settings set dangerously-skip-permissions on|off` updating CLFC-owned launcher defaults without editing Claude Code settings
 - `clfc add` working for:
   - a pending new Claude Code session UUID

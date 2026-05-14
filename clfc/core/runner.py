@@ -17,6 +17,7 @@ class InteractiveOptions:
     dangerously_skip_permissions: bool = False
     allow_dangerously_skip_permissions: bool = False
     resume: str | None = None
+    fork_session: bool = False
     continue_latest: bool = False
     name: str | None = None
     bare: bool = False
@@ -49,6 +50,8 @@ def build_interactive_command(options: InteractiveOptions) -> list[str]:
         command.append("--dangerously-skip-permissions")
     if options.resume:
         command.extend(["--resume", options.resume])
+    if options.fork_session:
+        command.append("--fork-session")
     if options.continue_latest:
         command.append("--continue")
     if options.name:

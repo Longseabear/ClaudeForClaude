@@ -16,6 +16,7 @@ The project is currently in the design and discovery phase. Its first goal is to
 ```powershell
 python -m clfc.cli.main doctor
 python -m clfc.cli.main interactive
+python -m clfc.cli.main resume <session-id-or-prefix>
 python -m clfc.cli.main scan
 python -m clfc.cli.main index
 python -m clfc.cli.main list
@@ -35,6 +36,20 @@ Launch Claude Code interactively with CLFC defaults:
 .\clfc.cmd interactive
 ```
 
+Resume an indexed Claude Code session from `list`:
+
+```powershell
+.\clfc.cmd index
+.\clfc.cmd list
+.\clfc.cmd resume 35ebc4da
+```
+
+Fork an indexed session into a new Claude Code conversation:
+
+```powershell
+.\clfc.cmd resume 35ebc4da --fork
+```
+
 Temporarily bypass Claude Code permission checks for one interactive launch:
 
 ```powershell
@@ -45,6 +60,12 @@ Persist that behavior as a CLFC launcher default:
 
 ```powershell
 .\clfc.cmd settings set dangerously-skip-permissions on
+```
+
+The same launcher flags work with `resume`:
+
+```powershell
+.\clfc.cmd resume 35ebc4da --dangerously-skip-permissions
 ```
 
 This default is intentionally stored in CLFC's own settings file under `%LOCALAPPDATA%\clfc\settings.json`, not in Claude Code's global settings.

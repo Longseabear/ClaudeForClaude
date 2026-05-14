@@ -31,6 +31,7 @@ class SettingsAndRunnerTests(unittest.TestCase):
                         workspace=Path(temp_dir),
                         effort="high",
                         resume="session-123",
+                        fork_session=True,
                         add_dirs=["C:\\work"],
                         extra_args=["--debug"],
                     )
@@ -46,6 +47,7 @@ class SettingsAndRunnerTests(unittest.TestCase):
         self.assertIn("high", command)
         self.assertIn("--resume", command)
         self.assertIn("session-123", command)
+        self.assertIn("--fork-session", command)
         self.assertIn("--add-dir", command)
         self.assertIn("C:\\work", command)
         self.assertIn("--debug", command)

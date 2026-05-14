@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import argparse
 
-from clfc.cli.commands import doctor, index, inspect, interactive, list, scan, settings
+from clfc.cli.commands import doctor, index, inspect, interactive, list, resume, scan, settings
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -47,6 +47,38 @@ def build_parser() -> argparse.ArgumentParser:
     interactive_parser.add_argument("--dry-run", action="store_true", help="Print the claude command without launching it.")
     interactive_parser.add_argument("extra_args", nargs=argparse.REMAINDER, help="Extra args after `--` are passed to claude.")
     interactive_parser.set_defaults(handler=interactive.run)
+
+    resume_parser = subparsers.add_parser(
+        "resume",
+        help="Resume an indexed Claude Code session by id or unique prefix.",
+    )
+    resume_parser.add_argument("session", help="Session id or unique prefix from `clfc list`.")
+    resume_parser.add_argument("--workspace", help="Workspace path to resolve within. Defaults to the current directory.")
+    resume_parser.add_argument("-a", "--all", action="store_true", help="Resolve across all indexed workspaces.")
+    resume_parser.add_argument("--refresh", action="store_true", help="Refresh the index before resolving.")
+    resume_parser.add_argument("--fork", action="store_true", help="Fork the session instead of appending to it.")
+    resume_parser.add_argument("--model", help="Claude Code model override.")
+    resume_parser.add_argument("--effort", choices=["low", "medium", "high", "xhigh", "max"], help="Effort override.")
+    resume_parser.add_argument(
+        "--permission-mode",
+        choices=["acceptEdits", "auto", "bypassPermissions", "default", "dontAsk", "plan"],
+        help="Claude Code permission mode override.",
+    )
+    resume_parser.add_argument(
+        "--dangerously-skip-permissions",
+        action="store_true",
+        help="Bypass all Claude Code permission checks for this launch.",
+    )
+    resume_parser.add_argument(
+        "--allow-dangerously-skip-permissions",
+        action="store_true",
+        help="Allow bypass mode to be selected in Claude Code without enabling it by default.",
+    )
+    resume_parser.add_argument("--name", help="Set Claude Code session display name.")
+    resume_parser.add_argument("--bare", action="store_true", help="Launch Claude Code in bare mode.")
+    resume_parser.add_argument("--add-dir", action="append", help="Additional directory to allow. Repeatable.")
+    resume_parser.add_argument("--dry-run", action="store_true", help="Print the claude command without launching it.")
+    resume_parser.set_defaults(handler=resume.run)
 
     settings_parser = subparsers.add_parser("settings", help="Show or update CLFC launcher defaults.")
     settings_subparsers = settings_parser.add_subparsers(dest="settings_command")

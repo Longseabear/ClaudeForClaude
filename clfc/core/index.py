@@ -37,6 +37,10 @@ class IndexResult:
         }
 
 
+class ResolveError(ValueError):
+    pass
+
+
 def clfc_data_root(env: dict[str, str] | None = None) -> Path:
     env = env or os.environ
     configured = env.get("CLFC_DATA_DIR")
@@ -106,6 +110,32 @@ def read_all_records(data_root: Path | None = None) -> list[dict[str, Any]]:
     for workspace_dir in sorted(path for path in workspaces_dir.iterdir() if path.is_dir()):
         records.extend(_read_records(workspace_dir))
     return sorted(records, key=lambda record: record.get("updated_at") or "", reverse=True)
+
+
+def resolve_record(
+    session: str,
+    workspace: Path,
+    all_workspaces: bool = False,
+    data_root: Path | None = None,
+) -> dict[str, Any]:
+    records = read_all_records(data_root) if all_workspaces else read_workspace_records(workspace, data_root)
+    matches = [
+        record
+        for record in records
+        if _matches_session(session, record)
+    ]
+    if not matches:
+        scope = "all indexed workspaces" if all_workspaces else str(workspace)
+        raise ResolveError(f"No indexed session matched {session!r} in {scope}. Run `clfc index` or use `--refresh`.")
+    if len(matches) > 1:
+        candidates = ", ".join(str(record.get("session_id", "")) for record in matches[:10])
+        raise ResolveError(f"Ambiguous session prefix {session!r}; matched {len(matches)} sessions: {candidates}")
+    return matches[0]
+
+
+def _matches_session(session: str, record: dict[str, Any]) -> bool:
+    session_id = str(record.get("session_id") or "")
+    return session_id == session or session_id.startswith(session)
 
 
 def _read_records(workspace_dir: Path) -> list[dict[str, Any]]:
