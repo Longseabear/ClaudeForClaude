@@ -30,11 +30,12 @@ def launch_record(
 ) -> int:
     session_id = str(record.get("session_id") or "")
     launch_workspace, real_workspace, _ = prepare_launch_workspace(record, fallback_workspace)
-    combined_add_dirs = _combined_add_dirs(real_workspace, add_dirs or [])
+    command_workspace = _command_workspace(launch_workspace, real_workspace)
+    combined_add_dirs = _combined_add_dirs(command_workspace, real_workspace, add_dirs or [])
     system_prompt, append_system_prompt = prompt_overrides(record, fallback_workspace)
     resume, explicit_session_id = _launch_session_args(record, fork_session=fork_session)
     options = InteractiveOptions(
-        workspace=launch_workspace,
+        workspace=command_workspace,
         model=model,
         effort=effort,
         permission_mode=permission_mode,
@@ -53,7 +54,8 @@ def launch_record(
     command = build_interactive_command(options)
     if dry_run:
         print(subprocess.list2cmdline(command))
-        print(f"cwd: {launch_workspace}")
+        print(f"cwd: {command_workspace}")
+        print(f"clfc-runtime: {launch_workspace}")
         if fork_session and (checkout_new or display_name):
             print("post-fork: would refresh index and update the new fork after Claude exits")
         return 0
@@ -94,11 +96,12 @@ def execute_record(
 ) -> int:
     session_id = str(record.get("session_id") or "")
     launch_workspace, real_workspace, _ = prepare_launch_workspace(record, fallback_workspace)
-    combined_add_dirs = _combined_add_dirs(real_workspace, add_dirs or [])
+    command_workspace = _command_workspace(launch_workspace, real_workspace)
+    combined_add_dirs = _combined_add_dirs(command_workspace, real_workspace, add_dirs or [])
     system_prompt, append_system_prompt = prompt_overrides(record, fallback_workspace)
     resume, explicit_session_id = _launch_session_args(record, fork_session=fork_session)
     options = InteractiveOptions(
-        workspace=launch_workspace,
+        workspace=command_workspace,
         model=model,
         effort=effort,
         permission_mode=permission_mode,
@@ -120,7 +123,8 @@ def execute_record(
     command = build_interactive_command(options)
     if dry_run:
         print(subprocess.list2cmdline(command))
-        print(f"cwd: {launch_workspace}")
+        print(f"cwd: {command_workspace}")
+        print(f"clfc-runtime: {launch_workspace}")
         if fork_session and (checkout_new or display_name):
             print("post-fork: would refresh index and update the new fork after Claude exits")
         return 0
@@ -140,10 +144,18 @@ def execute_record(
     return status
 
 
-def _combined_add_dirs(real_workspace: Path, add_dirs: list[str]) -> list[str]:
+def _command_workspace(launch_workspace: Path, real_workspace: Path) -> Path:
+    # Claude Code resolves --resume against the project cwd that owns the transcript.
+    return real_workspace if real_workspace.exists() else launch_workspace
+
+
+def _combined_add_dirs(command_workspace: Path, real_workspace: Path, add_dirs: list[str]) -> list[str]:
     real = str(real_workspace)
-    normalized = {real.lower()}
-    combined = [real]
+    normalized = {str(command_workspace).lower()}
+    combined: list[str] = []
+    if real.lower() not in normalized:
+        combined.append(real)
+        normalized.add(real.lower())
     for value in add_dirs:
         if value.lower() not in normalized:
             combined.append(value)
