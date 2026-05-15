@@ -176,6 +176,9 @@ The current implemented slice is intentionally smaller than the long-term comman
 ```bash
 clfc doctor
 clfc init
+clfc add <display_name>
+clfc add <display_name> <session_id_or_prefix>
+clfc add <display_name> --checkout
 clfc interactive
 clfc interactive --dangerously-skip-permissions
 clfc exec "<prompt>"

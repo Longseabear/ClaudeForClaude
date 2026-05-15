@@ -90,6 +90,20 @@ class SettingsAndRunnerTests(unittest.TestCase):
         self.assertIn("--append-system-prompt", command)
         self.assertEqual(command[-1], "Summarize the repo.")
 
+    def test_build_command_supports_explicit_session_id(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            with patch.dict(os.environ, {"CLFC_DATA_DIR": temp_dir}):
+                command = build_interactive_command(
+                    InteractiveOptions(
+                        workspace=Path(temp_dir),
+                        session_id="00000000-0000-4000-8000-000000000000",
+                    )
+                )
+
+        self.assertIn("--session-id", command)
+        self.assertIn("00000000-0000-4000-8000-000000000000", command)
+        self.assertNotIn("--resume", command)
+
 
 if __name__ == "__main__":
     unittest.main()

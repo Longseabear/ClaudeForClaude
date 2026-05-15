@@ -62,7 +62,10 @@ def collect_gc_candidates(
 
     candidates: list[GcCandidate] = []
     for record in records:
-        transcript_path = Path(str(record.get("path") or "")).expanduser()
+        raw_path = str(record.get("path") or "")
+        if not raw_path:
+            continue
+        transcript_path = Path(raw_path).expanduser()
         if not transcript_path.is_file():
             record_path = _record_path(data, record)
             candidates.append(

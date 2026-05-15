@@ -17,6 +17,7 @@ class InteractiveOptions:
     dangerously_skip_permissions: bool = False
     allow_dangerously_skip_permissions: bool = False
     resume: str | None = None
+    session_id: str | None = None
     fork_session: bool = False
     continue_latest: bool = False
     name: str | None = None
@@ -60,6 +61,8 @@ def build_interactive_command(options: InteractiveOptions) -> list[str]:
         command.extend(["--append-system-prompt", options.append_system_prompt])
     if options.resume:
         command.extend(["--resume", options.resume])
+    if options.session_id:
+        command.extend(["--session-id", options.session_id])
     if options.fork_session:
         command.append("--fork-session")
     if options.continue_latest:

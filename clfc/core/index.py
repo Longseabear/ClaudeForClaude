@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -126,6 +127,45 @@ def write_record(record: dict[str, Any], data_root: Path | None = None) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     _write_json(path, record)
     return path
+
+
+def create_manual_record(
+    display_name: str,
+    workspace: Path,
+    *,
+    session_id: str | None = None,
+    launch_mode: str = "session-id",
+    data_root: Path | None = None,
+) -> dict[str, Any]:
+    workspace = workspace.expanduser().resolve()
+    normalized_name = display_name.strip()
+    if not normalized_name:
+        raise ResolveError("Display name cannot be empty.")
+    session_id = session_id or str(uuid.uuid4())
+    now = _now()
+    record: dict[str, Any] = {
+        "schema_version": SCHEMA_VERSION,
+        "session_id": session_id,
+        "cwd": str(workspace),
+        "workspace_hash": workspace_hash(workspace),
+        "path": "",
+        "created_at": now,
+        "updated_at": now,
+        "indexed_at": now,
+        "display_name": normalized_name,
+        "named_at": now,
+        "source": "manual",
+        "pending_transcript": True,
+        "launch_mode": launch_mode,
+        "role_counts": {},
+        "model_counts": {},
+        "tool_counts": {},
+        "tool_error_count": 0,
+        "usage": {"input_tokens": 0, "output_tokens": 0},
+    }
+    _assert_unique_display_name(normalized_name, record, workspace, False, data_root)
+    write_record(record, data_root)
+    return record
 
 
 def resolve_record(

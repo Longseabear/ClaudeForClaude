@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 
 from clfc.cli.commands import (
+    add,
     checkout,
     current,
     doctor,
@@ -71,6 +72,19 @@ def build_parser() -> argparse.ArgumentParser:
     interactive_parser.add_argument("--dry-run", action="store_true", help="Print the claude command without launching it.")
     interactive_parser.add_argument("extra_args", nargs=argparse.REMAINDER, help="Extra args after `--` are passed to claude.")
     interactive_parser.set_defaults(handler=interactive.run)
+
+    add_parser = subparsers.add_parser(
+        "add",
+        help="Add a named CLFC session, creating a new Claude session id when none is provided.",
+    )
+    add_parser.add_argument("display_name", help="CLFC display name to create or assign.")
+    add_parser.add_argument("session", nargs="?", help="Existing indexed session id/prefix/display name, or a full unindexed UUID.")
+    add_parser.add_argument("--workspace", help="Workspace path. Defaults to the current directory.")
+    add_parser.add_argument("-a", "--all", action="store_true", help="Resolve an existing session across all indexed workspaces.")
+    add_parser.add_argument("--refresh", action="store_true", help="Refresh the index before resolving an existing session.")
+    add_parser.add_argument("--checkout", action="store_true", help="Check out the added/named session immediately.")
+    add_parser.add_argument("--json", action="store_true", help="Print machine-readable JSON.")
+    add_parser.set_defaults(handler=add.run)
 
     exec_parser = subparsers.add_parser(
         "exec",

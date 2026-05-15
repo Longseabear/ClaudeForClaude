@@ -5,7 +5,14 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from clfc.core.index import ResolveError, read_workspace_records, resolve_record, set_display_name, write_index
+from clfc.core.index import (
+    ResolveError,
+    create_manual_record,
+    read_workspace_records,
+    resolve_record,
+    set_display_name,
+    write_index,
+)
 from clfc.core.transcript import summarize_transcript
 
 
@@ -194,6 +201,20 @@ class IndexTests(unittest.TestCase):
 
             with self.assertRaises(ResolveError):
                 set_display_name("bbbbbb12", "main", workspace, data_root=data_root)
+
+    def test_create_manual_record_adds_named_pending_session(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            workspace = root / "workspace"
+            workspace.mkdir()
+
+            record = create_manual_record("builder", workspace, data_root=root / "clfc-data")
+            resolved = resolve_record("builder", workspace, data_root=root / "clfc-data")
+
+        self.assertEqual(record["display_name"], "builder")
+        self.assertEqual(record["launch_mode"], "session-id")
+        self.assertTrue(record["pending_transcript"])
+        self.assertEqual(resolved["session_id"], record["session_id"])
 
 
 def _write_jsonl(path: Path, records: list[dict[str, object]]) -> None:

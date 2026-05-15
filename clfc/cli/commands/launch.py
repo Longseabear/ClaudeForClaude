@@ -32,6 +32,7 @@ def launch_record(
     launch_workspace, real_workspace, _ = prepare_launch_workspace(record, fallback_workspace)
     combined_add_dirs = _combined_add_dirs(real_workspace, add_dirs or [])
     system_prompt, append_system_prompt = prompt_overrides(record, fallback_workspace)
+    resume, explicit_session_id = _launch_session_args(record, fork_session=fork_session)
     options = InteractiveOptions(
         workspace=launch_workspace,
         model=model,
@@ -39,7 +40,8 @@ def launch_record(
         permission_mode=permission_mode,
         dangerously_skip_permissions=dangerously_skip_permissions,
         allow_dangerously_skip_permissions=allow_dangerously_skip_permissions,
-        resume=session_id,
+        resume=resume,
+        session_id=explicit_session_id,
         fork_session=fork_session,
         name=name,
         bare=bare,
@@ -94,6 +96,7 @@ def execute_record(
     launch_workspace, real_workspace, _ = prepare_launch_workspace(record, fallback_workspace)
     combined_add_dirs = _combined_add_dirs(real_workspace, add_dirs or [])
     system_prompt, append_system_prompt = prompt_overrides(record, fallback_workspace)
+    resume, explicit_session_id = _launch_session_args(record, fork_session=fork_session)
     options = InteractiveOptions(
         workspace=launch_workspace,
         model=model,
@@ -101,7 +104,8 @@ def execute_record(
         permission_mode=permission_mode,
         dangerously_skip_permissions=dangerously_skip_permissions,
         allow_dangerously_skip_permissions=allow_dangerously_skip_permissions,
-        resume=session_id,
+        resume=resume,
+        session_id=explicit_session_id,
         fork_session=fork_session,
         name=name,
         bare=bare,
@@ -145,6 +149,13 @@ def _combined_add_dirs(real_workspace: Path, add_dirs: list[str]) -> list[str]:
             combined.append(value)
             normalized.add(value.lower())
     return combined
+
+
+def _launch_session_args(record: dict[str, object], *, fork_session: bool) -> tuple[str | None, str | None]:
+    session_id = str(record.get("session_id") or "")
+    if record.get("launch_mode") == "session-id" and not fork_session:
+        return None, session_id
+    return session_id, None
 
 
 def _transcript_session_ids(workspace: Path) -> set[str]:

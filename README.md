@@ -60,6 +60,7 @@ See `docs/installation.md` for pipx, PATH troubleshooting, first-run setup, and 
 clfc doctor
 clfc init
 clfc interactive
+clfc add <display-name>
 clfc exec "<prompt>"
 clfc resume <session-id-or-prefix>
 clfc fork <session-id-or-prefix>
@@ -109,6 +110,20 @@ Open the numbered session picker:
 
 ```powershell
 clfc open
+```
+
+Create a named CLFC session before the first Claude Code transcript exists:
+
+```powershell
+clfc add builder --checkout
+clfc exec "Start by inspecting the repository."
+```
+
+Name an existing indexed session:
+
+```powershell
+clfc add main 35ebc4da
+clfc checkout main
 ```
 
 Launch Claude Code interactively with CLFC defaults:
